@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { fetchJson } from "../common/http";
-import { artistKey, normalize, sleep, trackKey } from "../common/text";
+import { artistKey, isMixCut, normalize, sleep, trackKey } from "../common/text";
 import { env } from "../env";
 
 export interface Candidate {
@@ -190,7 +190,7 @@ export class LastfmService {
         const key = artistKey(c.artist);
         if ((perArtist.get(key) ?? 0) >= options.maxPerArtist) continue;
         if (seedMap.has(c.key) || picked.some((p) => p.key === c.key)) continue;
-        if (!normalize(c.title)) continue;
+        if (!normalize(c.title) || isMixCut(c.title)) continue;
         if (await options.exclude(c)) continue;
         if ((await this.userPlaycount(user, "track.getinfo", { artist: c.artist, track: c.title })) > 0) continue;
         picked.push(c);

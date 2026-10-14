@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { fetchJson } from "../common/http";
-import { mainArtist, normalize, sleep } from "../common/text";
+import { mainArtist, normalize, sleep, stripVersion } from "../common/text";
 import { env } from "../env";
 
 export interface PlexTrack {
@@ -87,11 +87,12 @@ export class PlexService {
 
   async isInLibrary(artist: string, title: string): Promise<boolean> {
     const wantedArtist = normalize(mainArtist(artist));
-    const wantedTitle = normalize(title);
+    // Toutes versions confondues : si tu as l'original, le remix n'est pas proposé (et inversement).
+    const wantedTitle = normalize(stripVersion(title));
     for (const section of await this.musicSections()) {
-      for (const track of await this.searchTracks(section, title)) {
+      for (const track of await this.searchTracks(section, stripVersion(title))) {
         const trackArtist = normalize(mainArtist(track.originalTitle ?? track.grandparentTitle ?? ""));
-        if (normalize(track.title) === wantedTitle && trackArtist === wantedArtist) return true;
+        if (normalize(stripVersion(track.title)) === wantedTitle && trackArtist === wantedArtist) return true;
       }
     }
     return false;

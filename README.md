@@ -1,87 +1,89 @@
 # discoverr
 
-**Les « Découvertes de la semaine » de Spotify, mais dans ta bibliothèque Plex.**
+🇫🇷 [Version française](README_fr.md)
 
-Chaque semaine, discoverr choisit des titres que tu n'as jamais écoutés à partir de ton historique **Last.fm**, les télécharge avec [pickarr](https://gitlab.com/dhmetha/pickarr) (FLAC via Soulseek quand il existe, sinon YouTube), et remplace une playlist dans **Plex**. La semaine suivante, ce que tu as aimé (❤️ dans Plexamp) rejoint ta bibliothèque, le reste est supprimé : aucun fichier inutile ne s'accumule.
+**Spotify's "Discover Weekly", but in your Plex library.**
 
-- Interface web : semaine en cours, validation avec extraits audio, historique, statistiques, état des services, réglages.
-- Plusieurs profils : chaque utilisateur Plex a son compte Last.fm, ses ❤️ et sa playlist.
-- Prudent par conception : rien n'est jamais supprimé hors du dossier des découvertes, et au moindre doute le fichier est gardé.
-- Notifications Discord, mot de passe, clé d'API pour les scripts.
+Every week, discoverr picks tracks you have never listened to based on your **Last.fm** history, downloads them with [pickarr](https://gitlab.com/dhmetha/pickarr) (FLAC via Soulseek when available, YouTube otherwise), and replaces a playlist in **Plex**. The following week, what you liked (❤️ in Plexamp) joins your library and the rest is deleted: no useless files pile up.
+
+- Web UI: current week, review with audio previews, history, statistics, service health, settings.
+- Multiple profiles: each Plex user has their own Last.fm account, ❤️ and playlist.
+- Cautious by design: nothing is ever deleted outside the discoveries folder, and when in doubt the file is kept.
+- Discord notifications, password, API key for scripts.
 
 ---
 
-## Sommaire
+## Contents
 
-- [Comment ça marche](#comment-ça-marche)
-- [Prérequis](#prérequis)
+- [How it works](#how-it-works)
+- [Requirements](#requirements)
 - [Installation](#installation)
-- [Premiers pas](#premiers-pas)
-- [L'interface](#linterface)
-- [Profils et comptes Plex](#profils-et-comptes-plex)
-- [Le ménage, et ce qui le rend sûr](#le-ménage-et-ce-qui-le-rend-sûr)
+- [Getting started](#getting-started)
+- [The interface](#the-interface)
+- [Profiles and Plex accounts](#profiles-and-plex-accounts)
+- [Cleanup, and what makes it safe](#cleanup-and-what-makes-it-safe)
 - [Configuration](#configuration)
 - [API](#api)
-- [Accès depuis l'extérieur](#accès-depuis-lextérieur)
-- [Développement](#développement)
-- [Limites connues](#limites-connues)
-- [Crédits et licences](#crédits-et-licences)
+- [Remote access](#remote-access)
+- [Development](#development)
+- [Known limitations](#known-limitations)
+- [Credits and licenses](#credits-and-licenses)
 
 ---
 
-## Comment ça marche
+## How it works
 
 ```
           Last.fm                 YouTube Music + Deezer            pickarr-discovery              Plex
-   (tes écoutes, titres    ──►   (lien du titre, extrait    ──►   (Soulseek, sinon YouTube,  ──►  playlist
-    et artistes similaires)        de 30 s, pochette)               tags Deezer, rangement)         « Découvertes »
+   (your scrobbles, similar ──►  (track link, 30 s         ──►   (Soulseek, else YouTube,   ──►  "Discoveries"
+    tracks and artists)           preview, cover art)              Deezer tags, filing)            playlist
 ```
 
-Chaque semaine (lundi 3 h par défaut), pour chaque profil actif :
+Every week (Monday 3 AM by default), for each active profile:
 
-1. **Sélection.** discoverr part de tes titres favoris, tes titres aimés et tes écoutes récentes sur Last.fm, puis cherche :
-   - des **titres similaires** (`track.getSimilar`) ;
-   - des **artistes que tu n'as jamais écoutés**, proches de tes favoris (30 % par défaut).
+1. **Selection.** discoverr starts from your top tracks, loved tracks and recent scrobbles on Last.fm, then looks for:
+   - **similar tracks** (`track.getSimilar`);
+   - **artists you have never listened to**, close to your favorites (30% by default).
 
-   Il écarte ce que tu as déjà écouté, ce qui est déjà dans Plex, ce qui t'a déjà été proposé et les artistes bloqués. Il garde au plus 2 titres par artiste.
-2. **Validation** (facultative). Si le profil est en mode validation, la sélection attend dans l'interface. Tu écoutes les extraits et écartes ce qui ne te tente pas, puis tu valides. Sans action de ta part, elle est validée d'office au bout de 48 h.
-3. **Téléchargement.** Chaque titre est envoyé à une instance pickarr dédiée, qui l'importe dans `Musiques/Decouvertes`.
-4. **Playlist.** La playlist Plex du profil est vidée puis remplie avec les nouveaux titres. C'est la même playlist chaque semaine, donc elle reste épinglée dans Plexamp.
-5. **Ménage de la semaine précédente**, une fois la nouvelle playlist en place :
-   - **gardés** : les titres ❤️ (note ≥ 10), ceux marqués « Garder » dans l'interface et ceux ajoutés à une autre de tes playlists. Ils sont déplacés dans ton dossier (`Musiques/pickarr` par défaut) et leur note est conservée ;
-   - **supprimés** : tous les autres, fichier et dossiers vides compris.
+   It excludes what you have already listened to, what is already in Plex, what was already suggested to you, and blocked artists. It keeps at most 2 tracks per artist.
+2. **Review** (optional). If the profile is in review mode, the selection waits in the UI. You listen to the previews, discard what you don't fancy, then approve. Without any action, it is auto-approved after 48 h.
+3. **Download.** Each track is sent to a dedicated pickarr instance, which imports it into `Musiques/Decouvertes`.
+4. **Playlist.** The profile's Plex playlist is emptied, then filled with the new tracks. It is the same playlist every week, so it stays pinned in Plexamp.
+5. **Cleanup of the previous week**, once the new playlist is in place:
+   - **kept**: ❤️ tracks (rating ≥ 10), tracks marked "Keep" in the UI, and tracks added to another of your playlists. They are moved to your folder (`Musiques/pickarr` by default) and their rating is preserved;
+   - **deleted**: all the others, file and empty folders included.
 
-### Pourquoi une instance pickarr dédiée ?
+### Why a dedicated pickarr instance?
 
-pickarr n'écrit que dans un seul dossier. En lui consacrant une instance qui écrit dans `Musiques/Decouvertes`, tout ce que discoverr télécharge est isolé. discoverr peut alors refuser toute suppression ailleurs : ta bibliothèque principale est hors d'atteinte.
+pickarr only writes to a single folder. By dedicating an instance that writes to `Musiques/Decouvertes`, everything discoverr downloads is isolated. discoverr can then refuse any deletion elsewhere: your main library is out of reach.
 
-Quand pickarr saura écrire dans un sous-dossier par lien, la variable `PICKARR_SUBFOLDER` permettra de n'utiliser qu'une seule instance, sans changer le code.
+Once pickarr can write to a per-link subfolder, the `PICKARR_SUBFOLDER` variable will allow using a single instance, without code changes.
 
 ---
 
-## Prérequis
+## Requirements
 
-| Quoi | Pourquoi |
+| What | Why |
 |---|---|
-| **Plex** avec une bibliothèque Musique | Playlist, ❤️, lecture via Plexamp |
-| **Un compte Last.fm qui reçoit tes écoutes** (scrobbling) | Sans historique, pas de recommandations. Active le scrobbling depuis Plex/Plexamp ou un outil comme [multi-scrobbler](https://github.com/FoxxMD/multi-scrobbler). |
-| **Une clé d'API Last.fm** | Gratuite : <https://www.last.fm/api/account/create> |
-| **pickarr** | Téléchargement et taggage. L'exemple de compose en démarre une instance. |
-| **slskd** (facultatif) | Pour récupérer du FLAC via Soulseek. Sans lui, pickarr se rabat sur YouTube / SoundCloud. |
-| **Docker** | amd64 ou arm64 |
+| **Plex** with a Music library | Playlist, ❤️, playback via Plexamp |
+| **A Last.fm account receiving your plays** (scrobbling) | No history, no recommendations. Enable scrobbling from Plex/Plexamp or a tool like [multi-scrobbler](https://github.com/FoxxMD/multi-scrobbler). |
+| **A Last.fm API key** | Free: <https://www.last.fm/api/account/create> |
+| **pickarr** | Downloading and tagging. The example compose file starts an instance. |
+| **slskd** (optional) | To get FLAC via Soulseek. Without it, pickarr falls back to YouTube / SoundCloud. |
+| **Docker** | amd64 or arm64 |
 
 ---
 
 ## Installation
 
-### 1. Les dossiers
+### 1. Folders
 
-discoverr a besoin de ton dossier de musique monté **tel quel**, avec au moins :
+discoverr needs your music folder mounted **as is**, with at least:
 
 ```
 Musiques/
-├── Decouvertes/   ← créé pour discoverr : uniquement les titres en cours d'essai
-└── pickarr/       ← (ou n'importe quel autre) où atterrissent les titres aimés
+├── Decouvertes/   ← created for discoverr: only the tracks currently on trial
+└── pickarr/       ← (or any other) where liked tracks land
 ```
 
 ```bash
@@ -89,212 +91,214 @@ mkdir -p /mnt/media/Musiques/Decouvertes ./appdata/discoverr ./appdata/pickarr-d
 chown -R 1000:1000 ./appdata /mnt/media/Musiques/Decouvertes
 ```
 
-Les containers tournent avec l'UID/GID 1000.
+Containers run with UID/GID 1000.
 
 ### 2. Plex
 
-Dans ta bibliothèque Musique (**Modifier → Ajouter des dossiers**), ajoute :
-- `Musiques/Decouvertes` ;
-- le dossier des titres aimés, s'il n'y est pas déjà.
+In your Music library (**Edit → Add folders**), add:
+- `Musiques/Decouvertes`;
+- the liked-tracks folder, if it isn't already there.
 
-### 3. Les variables
+### 3. Variables
 
 ```bash
 cp .env.example .env
 ```
 
-Remplis au minimum :
+Fill in at least:
 - `MUSIC_DIR`
-- `PLEX_MUSIC_ROOT` : le même dossier, vu depuis Plex
+- `PLEX_MUSIC_ROOT`: the same folder, as seen by Plex
 - `DISCOVERR_PASSWORD`
 - `LASTFM_USER`
 - `LASTFM_API_KEY`
 - `PLEX_TOKEN`
 - `PICKARR_PASSWORD`
-- `DISCOVERY_PICKARR_API_KEY` : générer avec `openssl rand -hex 24`
+- `DISCOVERY_PICKARR_API_KEY`: generate with `openssl rand -hex 24`
 
-Le détail de chaque variable est dans [Configuration](#configuration).
+Each variable is detailed in [Configuration](#configuration).
 
-> **Trouver ton jeton Plex :**
+> **Finding your Plex token:**
 > ```bash
 > docker exec plex grep -o 'PlexOnlineToken="[^"]*"' "/config/Library/Application Support/Plex Media Server/Preferences.xml"
 > ```
-> Autre méthode : dans Plex Web, ouvre un média, puis **⋯ → Obtenir les infos → Afficher le XML**, et récupère la valeur de `X-Plex-Token` dans l'URL.
+> Alternatively: in Plex Web, open a media item, then **⋯ → Get Info → View XML**, and grab the `X-Plex-Token` value from the URL.
 
-### 4. Lancer
+### 4. Run
 
 ```bash
 docker compose -f docker-compose.example.yml up -d
 ```
 
-L'interface est sur **http://&lt;ton-serveur&gt;:8091**.
+The UI is at **http://&lt;your-server&gt;:8091**.
 
-> L'exemple suppose que Plex tourne sur le même hôte en `network_mode: host`, joignable à `host.docker.internal:32400`. Adapte `PLEX_URL` et `Pickarr__Plex__Url` sinon.
-
----
-
-## Premiers pas
-
-1. **Connecte-toi** avec `DISCOVERR_PASSWORD`.
-2. Ouvre **État** : tout doit être au vert (Plex, pickarr, Last.fm, dossiers, bibliothèques Plex, espace disque). Chaque erreur dit quoi corriger.
-3. Le premier démarrage se fait en **mode simulation**. Dans **Semaine**, clique sur **Lancer maintenant** : tu vois ce qui aurait été proposé, mais rien n'est téléchargé ni supprimé.
-4. Si la sélection te plaît, va dans **Réglages**, décoche **Mode simulation** et relance.
-5. Écoute ta playlist dans Plexamp et mets un ❤️ à ce que tu veux garder. Le reste disparaîtra au prochain lancement.
+> The example assumes Plex runs on the same host with `network_mode: host`, reachable at `host.docker.internal:32400`. Adjust `PLEX_URL` and `Pickarr__Plex__Url` otherwise.
 
 ---
 
-## L'interface
+## Getting started
 
-| Page | Contenu |
+1. **Log in** with `DISCOVERR_PASSWORD`.
+2. Open **Health** (État): everything should be green (Plex, pickarr, Last.fm, folders, Plex libraries, disk space). Each error tells you what to fix.
+3. The first boot is in **dry-run mode**. In **Week** (Semaine), click **Run now**: you see what would have been suggested, but nothing is downloaded or deleted.
+4. If you like the selection, go to **Settings** (Réglages), uncheck **Dry-run mode** and run again.
+5. Listen to your playlist in Plexamp and ❤️ what you want to keep. The rest will disappear on the next run.
+
+> The UI is in French; English page names are given here with the French label in parentheses.
+
+---
+
+## The interface
+
+| Page | Content |
 |---|---|
-| **Semaine** | Avancement du lancement en cours. Sélection à valider, avec extraits de 30 s, boutons « Écarter » et « Bloquer l'artiste ». Playlist en cours, avec l'état ❤️ lu en direct dans Plex et un bouton « Garder ». Reprise d'un téléchargement interrompu. |
-| **Historique** | Chaque semaine (titres gardés et supprimés) et chaque lancement, avec durée et erreur éventuelle. |
-| **Statistiques** | Taux de ❤️ global, par semaine, et par origine (titres proches de tes écoutes ou nouveaux artistes). Réussite des téléchargements, part de FLAC, sources audio, artistes les plus gardés. |
-| **État** | Vérification en direct de tout ce dont un lancement a besoin, et journal en temps réel. |
-| **Réglages** | Profils, planification, sélection, ménage, simulation, notifications Discord, artistes bloqués. |
+| **Week** (Semaine) | Progress of the current run. Selection to review, with 30 s previews, "Discard" and "Block artist" buttons. Current playlist, with ❤️ state read live from Plex and a "Keep" button. Resume an interrupted download. |
+| **History** (Historique) | Each week (kept and deleted tracks) and each run, with duration and any error. |
+| **Statistics** (Statistiques) | ❤️ rate overall, per week, and per origin (tracks close to your listening or new artists). Download success, FLAC share, audio sources, most-kept artists. |
+| **Health** (État) | Live check of everything a run needs, and real-time log. |
+| **Settings** (Réglages) | Profiles, schedule, selection, cleanup, dry run, Discord notifications, blocked artists. |
 
 ---
 
-## Profils et comptes Plex
+## Profiles and Plex accounts
 
-Un **profil** associe :
-- un compte Last.fm ;
-- une playlist Plex ;
-- un nombre de titres ;
-- un dossier pour les titres aimés ;
-- éventuellement le mode validation.
+A **profile** ties together:
+- a Last.fm account;
+- a Plex playlist;
+- a number of tracks;
+- a folder for liked tracks;
+- optionally, review mode.
 
-Sur Plex, les ❤️ et les playlists sont **propres à chaque compte**. Pour un autre membre du foyer, crée un profil et renseigne **son** jeton Plex :
-- sa playlist sera créée sur son compte ;
-- seuls **ses** ❤️ comptent pour son ménage.
+On Plex, ❤️ and playlists are **specific to each account**. For another household member, create a profile and enter **their** Plex token:
+- their playlist will be created on their account;
+- only **their** ❤️ count for their cleanup.
 
-Sans jeton, le profil utilise le compte administrateur (`PLEX_TOKEN`).
+Without a token, the profile uses the admin account (`PLEX_TOKEN`).
 
-**Un même titre proposé à deux profils** n'est téléchargé qu'une fois. Il n'est supprimé que lorsque plus aucun profil ne l'a en cours.
+**The same track suggested to two profiles** is downloaded only once. It is only deleted when no profile has it in progress anymore.
 
 ---
 
-## Le ménage, et ce qui le rend sûr
+## Cleanup, and what makes it safe
 
-Le ménage supprime des fichiers : il est conçu pour pécher par excès de prudence.
+Cleanup deletes files: it is designed to err on the side of caution.
 
-- **Périmètre :** rien n'est jamais supprimé en dehors du dossier des découvertes. Le chemin réel est vérifié, liens symboliques résolus. Le dossier des titres aimés ne peut pas être placé dans les découvertes.
-- **En cas de doute, on garde :** si Plex ne répond pas, le ménage n'est pas lancé. Si un titre est introuvable dans Plex, il est mis de côté (« ménage reporté ») et retraité au lancement suivant. Chaque fois, tu reçois une notification Discord.
-- **La note survit au déplacement :** Plex voit parfois un fichier déplacé comme un nouvel élément. discoverr remet donc la note, et le titre reste dans ❤️ Tracks.
-- **Simulation :** en mode simulation, tout est journalisé et rien n'est touché.
-- **Reprise après interruption :** un téléchargement arrêté par un redémarrage ou une panne de pickarr reprend au démarrage, ou via « Reprendre ». Les titres déjà envoyés ne sont pas renvoyés.
+- **Scope:** nothing is ever deleted outside the discoveries folder. The real path is checked, with symlinks resolved. The liked-tracks folder cannot be placed inside the discoveries folder.
+- **When in doubt, keep:** if Plex doesn't respond, cleanup doesn't run. If a track can't be found in Plex, it is set aside ("cleanup postponed") and retried on the next run. Each time, you get a Discord notification.
+- **The rating survives the move:** Plex sometimes sees a moved file as a new item. discoverr therefore re-applies the rating, and the track stays in ❤️ Tracks.
+- **Dry run:** in dry-run mode, everything is logged and nothing is touched.
+- **Resume after interruption:** a download stopped by a restart or a pickarr failure resumes on startup, or via "Resume". Tracks already sent are not resent.
 
 ---
 
 ## Configuration
 
-### Variables d'environnement
+### Environment variables
 
-Seuls les secrets, les URLs et les chemins sont dans l'environnement. Tout le reste se règle dans l'interface, sans redémarrage.
+Only secrets, URLs and paths live in the environment. Everything else is set in the UI, without restarting.
 
-| Variable | Défaut | Rôle |
+| Variable | Default | Purpose |
 |---|---|---|
-| `DISCOVERR_PASSWORD` | *(vide)* | Mot de passe de l'interface. Vide : interface ouverte (un avertissement est journalisé). Le changer ferme toutes les sessions. |
-| `DISCOVERR_API_KEY` | *(vide)* | Clé pour les scripts, envoyée dans l'en-tête `X-Api-Key`. Vide : désactivée. |
-| `LASTFM_API_KEY` | — | Clé d'API Last.fm. **Obligatoire.** |
-| `PLEX_URL` | `http://host.docker.internal:32400` | Adresse de Plex. |
-| `PLEX_TOKEN` | — | Jeton administrateur (scans, corbeille, profils sans jeton). **Obligatoire.** |
-| `PICKARR_URL` | `http://pickarr-discovery:8080` | Instance pickarr des découvertes. |
-| `PICKARR_API_KEY` | — | Sa clé d'API (`Pickarr__ApiKey`). **Obligatoire.** |
-| `PICKARR_LIBRARY_SUBDIR` | `Decouvertes` | Dossier, sous `MUSIC_ROOT`, qui correspond au dossier de bibliothèque de cette instance pickarr. |
-| `PICKARR_SUBFOLDER` | *(vide)* | Pour une future version de pickarr qui écrirait dans un sous-dossier : envoyé avec chaque lien. |
-| `MUSIC_ROOT` | `/music` | Le dossier de musique, vu par discoverr. |
-| `PLEX_MUSIC_ROOT` | `/media/Musiques` | Le même dossier, vu par Plex. |
-| `DISCOVERY_SUBDIR` | `Decouvertes` | Dossier des découvertes, sous `MUSIC_ROOT`. |
-| `TZ` | `Europe/Paris` | Fuseau de la planification. |
-| `LASTFM_USER` | — | *Premier démarrage :* crée le profil « Moi » avec ce compte. |
-| `DRY_RUN` | — | *Premier démarrage :* active le mode simulation. |
-| `DATA_DIR` | `/data` | Base SQLite et clé de session. |
+| `DISCOVERR_PASSWORD` | *(empty)* | UI password. Empty: open UI (a warning is logged). Changing it closes all sessions. |
+| `DISCOVERR_API_KEY` | *(empty)* | Key for scripts, sent in the `X-Api-Key` header. Empty: disabled. |
+| `LASTFM_API_KEY` | — | Last.fm API key. **Required.** |
+| `PLEX_URL` | `http://host.docker.internal:32400` | Plex address. |
+| `PLEX_TOKEN` | — | Admin token (scans, trash, profiles without a token). **Required.** |
+| `PICKARR_URL` | `http://pickarr-discovery:8080` | Discovery pickarr instance. |
+| `PICKARR_API_KEY` | — | Its API key (`Pickarr__ApiKey`). **Required.** |
+| `PICKARR_LIBRARY_SUBDIR` | `Decouvertes` | Folder, under `MUSIC_ROOT`, matching this pickarr instance's library folder. |
+| `PICKARR_SUBFOLDER` | *(empty)* | For a future pickarr version that writes to a subfolder: sent with each link. |
+| `MUSIC_ROOT` | `/music` | The music folder, as seen by discoverr. |
+| `PLEX_MUSIC_ROOT` | `/media/Musiques` | The same folder, as seen by Plex. |
+| `DISCOVERY_SUBDIR` | `Decouvertes` | Discoveries folder, under `MUSIC_ROOT`. |
+| `TZ` | `Europe/Paris` | Schedule time zone. |
+| `LASTFM_USER` | — | *First boot:* creates the "Moi" profile with this account. |
+| `DRY_RUN` | — | *First boot:* enables dry-run mode. |
+| `DATA_DIR` | `/data` | SQLite database and session key. |
 
-### Réglages (dans l'interface)
+### Settings (in the UI)
 
-| Réglage | Défaut | Rôle |
+| Setting | Default | Purpose |
 |---|---|---|
-| Lancement automatique | oui | Pour tous les profils actifs. |
-| Quand | `0 3 * * 1` | Expression cron (lundi 3 h). |
-| Part de nouveaux artistes | 30 % | Le reste : titres proches de tes écoutes. |
-| Titres max par artiste | 2 | Par semaine. |
-| Validation d'office après | 48 h | Profils en mode validation ; 0 = attendre indéfiniment. |
-| Attente max des téléchargements | 6 h | Au-delà, les titres non terminés comptent comme échecs. |
-| Note minimale pour garder | 10 | ❤️ Plexamp = 10 ; une note en étoiles va de 2 à 10. |
-| Garder les titres ajoutés à une autre playlist | oui | Même sans ❤️. |
-| Mode simulation | — | Rien n'est téléchargé, déplacé ni supprimé. |
-| Webhook Discord | — | Échecs, avertissements et résumé hebdomadaire (désactivable). |
+| Automatic run | yes | For all active profiles. |
+| When | `0 3 * * 1` | Cron expression (Monday 3 AM). |
+| New artists share | 30% | The rest: tracks close to your listening. |
+| Max tracks per artist | 2 | Per week. |
+| Auto-approve after | 48 h | Profiles in review mode; 0 = wait forever. |
+| Max download wait | 6 h | Beyond that, unfinished tracks count as failures. |
+| Minimum rating to keep | 10 | Plexamp ❤️ = 10; a star rating ranges from 2 to 10. |
+| Keep tracks added to another playlist | yes | Even without ❤️. |
+| Dry-run mode | — | Nothing is downloaded, moved or deleted. |
+| Discord webhook | — | Failures, warnings and weekly summary (can be disabled). |
 
 ---
 
 ## API
 
-Toute l'interface repose sur une API JSON sous `/api`. Les scripts s'authentifient avec l'en-tête `X-Api-Key: <DISCOVERR_API_KEY>`.
+The whole UI is built on a JSON API under `/api`. Scripts authenticate with the `X-Api-Key: <DISCOVERR_API_KEY>` header.
 
-| Méthode | Route | |
+| Method | Route | |
 |---|---|---|
-| GET | `/api/health` | Sonde de vie (publique) |
-| GET | `/api/health/details` | État de chaque service |
-| GET | `/api/status` | Lancements en cours, prochain lancement, dernier lancement par profil |
-| POST | `/api/profiles/:id/run` | Lancer un profil maintenant |
-| POST | `/api/profiles/:id/cleanup` | Relancer seulement le ménage |
-| GET | `/api/profiles/:id/weeks` | Semaines et titres (état ❤️ en direct pour la semaine en cours) |
-| POST | `/api/weeks/:id/approve` | Valider une sélection |
-| POST | `/api/weeks/:id/resume` | Reprendre un téléchargement interrompu |
-| DELETE | `/api/weeks/:id` | Supprimer une sélection non téléchargée |
-| PATCH | `/api/tracks/:id` | `{ "keep": true }` ou `{ "rejected": true }` |
-| GET | `/api/profiles/:id/stats` | Statistiques |
-| GET / PUT | `/api/settings` | Réglages |
-| GET / POST / PUT / DELETE | `/api/profiles[/:id]` | Profils (le jeton Plex n'est jamais renvoyé) |
-| GET / POST / DELETE | `/api/profiles/:id/blocked` | Artistes bloqués (`{ "artist": "…" }`) |
-| GET | `/api/runs?profileId=` | Historique des lancements |
-| GET | `/api/logs?after=` | Journal |
+| GET | `/api/health` | Liveness probe (public) |
+| GET | `/api/health/details` | Status of each service |
+| GET | `/api/status` | Runs in progress, next run, last run per profile |
+| POST | `/api/profiles/:id/run` | Run a profile now |
+| POST | `/api/profiles/:id/cleanup` | Re-run cleanup only |
+| GET | `/api/profiles/:id/weeks` | Weeks and tracks (live ❤️ state for the current week) |
+| POST | `/api/weeks/:id/approve` | Approve a selection |
+| POST | `/api/weeks/:id/resume` | Resume an interrupted download |
+| DELETE | `/api/weeks/:id` | Delete a selection that hasn't been downloaded |
+| PATCH | `/api/tracks/:id` | `{ "keep": true }` or `{ "rejected": true }` |
+| GET | `/api/profiles/:id/stats` | Statistics |
+| GET / PUT | `/api/settings` | Settings |
+| GET / POST / PUT / DELETE | `/api/profiles[/:id]` | Profiles (the Plex token is never returned) |
+| GET / POST / DELETE | `/api/profiles/:id/blocked` | Blocked artists (`{ "artist": "…" }`) |
+| GET | `/api/runs?profileId=` | Run history |
+| GET | `/api/logs?after=` | Log |
 
-Exemple : lancer le profil 1 depuis un script.
+Example: run profile 1 from a script.
 
 ```bash
 curl -X POST -H "X-Api-Key: $DISCOVERR_API_KEY" http://localhost:8091/api/profiles/1/run
 ```
 
-Avec une session (navigateur), les requêtes qui modifient quelque chose doivent porter l'en-tête `X-Requested-With: discoverr` (protection CSRF).
+With a (browser) session, mutating requests must carry the `X-Requested-With: discoverr` header (CSRF protection).
 
 ---
 
-## Accès depuis l'extérieur
+## Remote access
 
-L'interface fonctionne en HTTP sur le réseau local. Pour y accéder depuis l'extérieur, passe par un reverse proxy en HTTPS (Traefik, Caddy, tunnel Cloudflare…) :
-- le cookie de session passe automatiquement en `Secure` quand la requête arrive en HTTPS ;
-- l'en-tête `X-Forwarded-Proto` est pris en compte.
+The UI works over HTTP on the local network. To access it from outside, use an HTTPS reverse proxy (Traefik, Caddy, Cloudflare Tunnel…):
+- the session cookie automatically becomes `Secure` when the request arrives over HTTPS;
+- the `X-Forwarded-Proto` header is honored.
 
-Si tu l'exposes sur Internet, choisis un mot de passe solide. Ajoute idéalement une couche d'authentification devant (Cloudflare Access, Authelia…). La connexion est limitée à 5 essais ratés par IP toutes les 15 minutes.
+If you expose it to the Internet, choose a strong password. Ideally add an authentication layer in front (Cloudflare Access, Authelia…). Login is limited to 5 failed attempts per IP every 15 minutes.
 
 ---
 
-## Développement
+## Development
 
 ```
 discoverr/
-├── api/        NestJS 11 + Fastify, SQLite (node:sqlite intégré à Node 22)
+├── api/        NestJS 11 + Fastify, SQLite (node:sqlite built into Node 22)
 │   └── src/
-│       ├── discovery/     cycle, ménage, planification, semaines et lancements
+│       ├── discovery/     cycle, cleanup, scheduling, weeks and runs
 │       ├── integrations/  Last.fm, YouTube Music, Deezer, pickarr, Plex, Discord
 │       ├── profiles/  settings/  stats/  health/  auth/
-│       └── db/            connexion et migrations
+│       └── db/            connection and migrations
 ├── web/        Vue 3 + Vite + vue-router
-└── Dockerfile  construit le front et l'API dans une seule image
+└── Dockerfile  builds the front and the API into a single image
 ```
 
 ```bash
 # API (port 3000)
 cd api && npm ci
-cp ../.env.example .env   # puis exporte les variables, avec DATA_DIR et MUSIC_ROOT en chemins locaux
+cp ../.env.example .env   # then export the variables, with DATA_DIR and MUSIC_ROOT as local paths
 npm run build && npm start
 
-# Front (port 5175, /api relayé vers localhost:3000)
+# Front (port 5175, /api proxied to localhost:3000)
 cd web && npm ci && npm run dev
 
-# Vérifications
+# Checks
 cd api && npm run typecheck
 cd web && npm run typecheck
 
@@ -302,28 +306,28 @@ cd web && npm run typecheck
 docker build -t discoverr .
 ```
 
-**Base de données :** les migrations sont dans `api/src/db/migrations.ts` et s'appliquent au démarrage. On n'en modifie jamais une publiée : on en ajoute une.
+**Database:** migrations live in `api/src/db/migrations.ts` and are applied on startup. Never modify a published one: add a new one.
 
-**CI :** la CI (`.github/workflows/docker.yml`) vérifie les types et construit les deux parties à chaque push et pull request, puis publie l'image sur GHCR :
-- `latest` sur `main` ;
-- `X.Y.Z` et `X.Y` sur les tags `vX.Y.Z` ;
-- `sha-…` sur chaque commit.
-
----
-
-## Limites connues
-
-- **Recommandations :** elles ne valent que ce que vaut ton historique Last.fm. Quelques semaines de scrobbling sont nécessaires.
-- **Liens YouTube Music :** la recherche passe par une bibliothèque non officielle (`ytmusic-api`). Un titre introuvable est simplement ignoré.
-- **Extraits Deezer :** ils viennent de l'API publique de Deezer. S'ils sont indisponibles, le titre n'a pas d'extrait, mais tout le reste fonctionne.
-- **pickarr :** une instance dédiée est nécessaire tant que pickarr ne sait pas écrire dans un sous-dossier par lien.
-- **Une seule instance de discoverr à la fois :** l'état est dans une base SQLite locale.
+**CI:** CI (`.github/workflows/docker.yml`) type-checks and builds both parts on every push and pull request, then publishes the image to GHCR:
+- `latest` on `main`;
+- `X.Y.Z` and `X.Y` on `vX.Y.Z` tags;
+- `sha-…` on each commit.
 
 ---
 
-## Crédits et licences
+## Known limitations
 
-- [pickarr](https://gitlab.com/dhmetha/pickarr) par dhmetha : téléchargement, taggage et import dans Plex.
-- [Last.fm API](https://www.last.fm/api), [Deezer API](https://developers.deezer.com/api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (licence GPL-3.0).
+- **Recommendations:** they are only as good as your Last.fm history. A few weeks of scrobbling are needed.
+- **YouTube Music links:** search goes through an unofficial library (`ytmusic-api`). A track that can't be found is simply skipped.
+- **Deezer previews:** they come from Deezer's public API. If unavailable, the track has no preview, but everything else works.
+- **pickarr:** a dedicated instance is required until pickarr can write to a per-link subfolder.
+- **One discoverr instance at a time:** state lives in a local SQLite database.
 
-discoverr ne fait que trouver des titres et les confier à pickarr : c'est à toi de t'assurer que ce que tu télécharges respecte le droit applicable dans ton pays.
+---
+
+## Credits and licenses
+
+- [pickarr](https://gitlab.com/dhmetha/pickarr) by dhmetha: downloading, tagging and importing into Plex.
+- [Last.fm API](https://www.last.fm/api), [Deezer API](https://developers.deezer.com/api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (GPL-3.0 license).
+
+discoverr only finds tracks and hands them to pickarr: it is up to you to make sure what you download complies with the law in your country.

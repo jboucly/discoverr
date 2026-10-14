@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "start": "node --disable-warning=ExperimentalWarning dist/main.js",
+    "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/main.js",
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit"
   },

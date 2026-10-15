@@ -96,7 +96,9 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 ## Points en suspens
 
 ### Avant le premier déploiement
-- [ ] **Push** sur `github.com/jboucly/discoverr` (les commits sont locaux). Laisser la CI publier l'image, puis passer le package `discoverr` en **Public** dans les réglages du package GitHub.
+> **Déployé le 15/10/2026** sur le LXC via Portainer (image `ghcr.io/jboucly/discoverr:latest`, publique), avec `pickarr-discovery`. Première simulation réussie le 15/10 à 21:11 (profil renommé « Julien »). Restent : extraits Deezer depuis le serveur, slskd joignable par `pickarr-discovery` (« Connection refused (gluetun:5030) » au démarrage), premier vrai lancement, puis le premier ménage au cycle du 19/10.
+
+- [x] **Push** sur `github.com/jboucly/discoverr` (les commits sont locaux). Laisser la CI publier l'image, puis passer le package `discoverr` en **Public** dans les réglages du package GitHub.
 - [x] **Licence :** GPL-3.0 (fichier `LICENSE`), parce que l'image embarque `ytmusic-api`, sous GPL-3.0.
 - [ ] **Dans media-server**, le dossier `discoverr/` a été déplacé ici. Le compose de media-server référence seulement l'image. Il reste à commiter ce retrait dans media-server, et à mettre à jour son `CLAUDE.md`, qui pointe encore vers `discoverr/README.md` et `discoverr/CLAUDE.md`.
 - [ ] **Sur le LXC :**
@@ -107,7 +109,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
   Ajouter ensuite `Musiques/Decouvertes` à la bibliothèque Musique de Plex.
 - [ ] **Variables Portainer :** `DISCOVERR_PASSWORD`, `DISCOVERR_API_KEY` (facultative), `DISCOVERY_PICKARR_API_KEY` (une clé différente de celle du pickarr principal), `LASTFM_USER`, `LASTFM_API_KEY`, `PLEX_TOKEN`.
 - [ ] **Scrobbling :** vérifier que les écoutes Plexamp arrivent bien sur Last.fm. Sinon, passer par la liaison Last.fm du compte Plex ou par `multi-scrobbler`.
-- [ ] **Premier lancement en simulation** (actif par défaut au premier démarrage), page **État** au vert, puis désactiver la simulation dans Réglages.
+- [x] **Premier lancement en simulation** (actif par défaut au premier démarrage), page **État** au vert, puis désactiver la simulation dans Réglages.
 
 ### À demander à dhmetha (pickarr)
 - [x] Champ `subfolder` sur `POST /api/picks` : mergé le 14/10/2026 (MR !1), **pas encore dans l'image** `unetha` (construite le 08/10, sans CI : dhmetha la pousse à la main). Le sous-dossier est créé **sous la bibliothèque de pickarr** (`..` refusé) : avec le pickarr principal, les découvertes iront dans `Musiques/pickarr/Decouvertes`. Julien accepte que le ménage y supprime, à condition d'un accord explicite. Bascule une fois l'image publiée :

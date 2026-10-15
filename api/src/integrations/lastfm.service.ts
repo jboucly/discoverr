@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { fetchJson } from "../common/http";
-import { artistKey, isMixCut, normalize, sleep, trackKey } from "../common/text";
+import { artistKey, isMixCut, normalize, shuffle, sleep, trackKey } from "../common/text";
 import { env } from "../env";
 
 export interface Candidate {
@@ -202,6 +202,6 @@ export class LastfmService {
     await take(fresh, Math.round(count * options.newArtistRatio));
     await take(similar, count - picked.length);
     if (picked.length < count) await take(fresh, count - picked.length);
-    return picked.sort(() => Math.random() - 0.5);
+    return shuffle(picked);
   }
 }

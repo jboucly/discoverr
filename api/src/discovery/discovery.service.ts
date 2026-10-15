@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { DatabaseService } from "../db/database.service";
 import { discoveryDir, toPlexPath } from "../env";
 import { DeezerService } from "../integrations/deezer.service";
 import { DiscordService } from "../integrations/discord.service";
@@ -52,6 +53,7 @@ export class DiscoveryService implements OnModuleInit {
     private readonly cleanup: CleanupService,
     private readonly discord: DiscordService,
     private readonly ytmusic: YtmusicService,
+    private readonly database: DatabaseService,
   ) {}
 
   onModuleInit() {
@@ -91,6 +93,13 @@ export class DiscoveryService implements OnModuleInit {
     if (this.activities.has(profile.id)) throw new ConflictException(`Un lancement est déjà en cours pour ${profile.name}`);
     const dryRun = this.settings.get().dryRun;
     this.activities.set(profile.id, { profileId: profile.id, trigger, step: "démarrage", startedAt: new Date().toISOString() });
+    try {
+      this.database.backup();
+    } catch (err) {
+      // Une sauvegarde ratée ne bloque pas le lancement : la base reste intacte, on prévient seulement.
+      this.logger.warn(`Sauvegarde de la base impossible : ${(err as Error).message}`);
+      await this.discord.error("Sauvegarde de la base impossible", (err as Error).message);
+    }
     const runId = this.runs.start(profile.id, trigger, dryRun);
     try {
       await work();

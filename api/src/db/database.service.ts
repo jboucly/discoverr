@@ -1,11 +1,14 @@
 import { Injectable, Logger, OnModuleDestroy } from "@nestjs/common";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync, type SQLInputValue } from "node:sqlite";
 import { env } from "../env";
 import { MIGRATIONS } from "./migrations";
 
 type Params = Record<string, SQLInputValue> | SQLInputValue[];
+
+/** Nombre de sauvegardes gardées dans DATA_DIR/backups. */
+const BACKUPS_KEPT = 10;
 
 /** SQLite intégré à Node (node:sqlite) : pas de dépendance native à compiler dans l'image. */
 @Injectable()
@@ -32,6 +35,25 @@ export class DatabaseService implements OnModuleDestroy {
       });
       this.logger.log(`Migration ${version} appliquée`);
     }
+  }
+
+  /**
+   * Copie cohérente de la base (VACUUM INTO, sûr pendant que la base est ouverte) dans DATA_DIR/backups,
+   * en ne gardant que les BACKUPS_KEPT plus récentes. Renvoie le chemin du fichier créé.
+   */
+  backup(): string {
+    const dir = path.join(env.dataDir, "backups");
+    mkdirSync(dir, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const file = path.join(dir, `discoverr-${stamp}.db`);
+    this.db.prepare("VACUUM INTO ?").run(file);
+    const old = readdirSync(dir)
+      .filter((f) => /^discoverr-.*\.db$/.test(f))
+      .sort()
+      .reverse()
+      .slice(BACKUPS_KEPT);
+    for (const f of old) rmSync(path.join(dir, f), { force: true });
+    return file;
   }
 
   private args(params?: Params): SQLInputValue[] | [Record<string, SQLInputValue>] {

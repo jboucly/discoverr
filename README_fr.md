@@ -212,7 +212,7 @@ Seuls les secrets, les URLs et les chemins sont dans l'environnement. Tout le re
 | `TZ` | `Europe/Paris` | Fuseau de la planification. |
 | `LASTFM_USER` | — | *Premier démarrage :* crée le profil « Moi » avec ce compte. |
 | `DRY_RUN` | — | *Premier démarrage :* active le mode simulation. |
-| `DATA_DIR` | `/data` | Base SQLite et clé de session. |
+| `DATA_DIR` | `/data` | Base SQLite et clé de session. Une copie de la base est faite dans `backups/` avant chaque lancement (les 10 dernières sont gardées). |
 
 ### Réglages (dans l'interface)
 

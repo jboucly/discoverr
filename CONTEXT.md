@@ -124,9 +124,11 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - **Filtres de goûts** : exclure des genres (tags Last.fm), limiter la durée, écarter les lives et remixes.
 - **Métriques Prometheus** (`/api/metrics`) pour Grafana.
 - Playlist **« Radar »** : nouvelles sorties des artistes gardés.
-- **Sauvegarde automatique** de la base SQLite avant chaque lancement.
+
+### Fait depuis
+- Sauvegarde de la base avant chaque lancement : `DATA_DIR/backups`, 10 copies gardées (`VACUUM INTO`). Un échec prévient sur Discord sans bloquer le lancement.
 
 ### Petites dettes connues
 - Le compose de media-server déclare encore `version: "3.8"` (obsolète, ignoré par Docker).
-- Le choix entre « titres similaires » et « nouveaux artistes » se fait par quota simple, et l'ordre final est mélangé au hasard (`sort(() => Math.random() - 0.5)`). C'est suffisant, mais ce n'est pas un vrai mélange uniforme.
+- Le choix entre « titres similaires » et « nouveaux artistes » se fait par quota simple. L'ordre final est mélangé par Fisher-Yates (`shuffle` dans `common/text.ts`).
 - Pas de suite de tests. Le faux Plex et le faux pickarr écrits pour le test du cycle complet (un `mock.js` d'environ 120 lignes) n'ont pas été gardés dans le repo. Ils pourraient servir de base à des tests d'intégration.

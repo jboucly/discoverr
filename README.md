@@ -214,7 +214,7 @@ Only secrets, URLs and paths live in the environment. Everything else is set in 
 | `TZ` | `Europe/Paris` | Schedule time zone. |
 | `LASTFM_USER` | — | *First boot:* creates the "Moi" profile with this account. |
 | `DRY_RUN` | — | *First boot:* enables dry-run mode. |
-| `DATA_DIR` | `/data` | SQLite database and session key. |
+| `DATA_DIR` | `/data` | SQLite database and session key. A copy of the database is saved in `backups/` before each run (last 10 kept). |
 
 ### Settings (in the UI)
 

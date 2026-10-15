@@ -35,3 +35,13 @@ export const trackKey = (artist: string, title: string) => `${normalize(mainArti
 export const artistKey = (artist: string) => normalize(mainArtist(artist));
 
 export const now = () => new Date().toISOString();
+
+/** Mélange de Fisher-Yates : chaque ordre a la même probabilité (contrairement à sort + Math.random). */
+export function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j]!, result[i]!];
+  }
+  return result;
+}

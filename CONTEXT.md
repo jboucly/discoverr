@@ -73,7 +73,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - Captures de toutes les pages, en bureau et en mobile.
 
 **Vérifié en local contre les vrais services (14/10/2026 au soir) :**
-- Lancement depuis le Mac avec `api/.env` (voir [api/.env.example](api/.env.example)) : `npm run build && npm start` dans `api/`, base et dossier de musique factice sous `appdata/local/`.
+- Lancement depuis le Mac avec `api/.env` (voir [api/.env.example](api/.env.example)) : `npm run build && npm start` dans `api/` (aujourd'hui `pnpm build && pnpm start`), base et dossier de musique factice sous `appdata/local/`.
 - **Last.fm réel** (compte `jboucly`, 1 548 écoutes) : environ 97 graines, 55 titres similaires, 35 à 39 de nouveaux artistes. La sélection colle aux goûts (drum & bass, phonk). Durée d'une simulation : environ 2 min, surtout la recherche YouTube Music.
 - **Plex réel** (`192.168.1.33:32400`) : joignable, détection des titres déjà présents en bibliothèque.
 - **pickarr réel** : un lancement réel accidentel a envoyé 38 picks au pickarr **principal** (`:8090`), annulés à la main ; 1 titre a été importé dans `Musiques/pickarr` avant l'annulation. Une annulation compte comme un pick terminé, donc l'attente s'arrête normalement. Le lancement a ensuite échoué à l'étape playlist, car `Decouvertes` n'est pas dans une bibliothèque Plex. **Ne pas pointer `PICKARR_URL` vers le pickarr principal hors simulation.**
@@ -126,7 +126,8 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - Playlist **« Radar »** : nouvelles sorties des artistes gardés.
 
 ### Fait depuis
-- Tests d'intégration (`npm test` dans `api/`, lancés par la CI) : cycle complet, validation, reprise, ménage (❤️ / Garder / autre playlist, suppression, fichier partagé entre profils, Plex injoignable, titre introuvable), garde-fou de la bibliothèque pickarr partagée.
+- **Workspace pnpm** (pnpm 10.30.3, figé par `packageManager`) : un seul `pnpm-lock.yaml`, commandes à la racine. Les types des réponses de l'API sont dans `api/src/contracts.ts` et le front les importe (`discoverr-api/contracts`) au lieu de les recopier. Versions identiques à npm sauf rollup 4.64.6 → 4.64.7 et `@vue/compiler-*` 3.5.44 tiré par vue-tsc (outillage de build seulement). `fastify` ajouté aux dépendances de l'API : il était importé sans être déclaré.
+- Tests d'intégration (`pnpm test`, lancés par la CI) : cycle complet, validation, reprise, ménage (❤️ / Garder / autre playlist, suppression, fichier partagé entre profils, Plex injoignable, titre introuvable), garde-fou de la bibliothèque pickarr partagée.
 - Bug corrigé grâce aux tests : avec deux profils sur le même compte Plex, la playlist discoverr de l'un comptait comme « autre playlist » pour l'autre, et un titre proposé aux deux était toujours gardé. Les playlists des profils du même compte sont maintenant ignorées.
 - Sauvegarde de la base avant chaque lancement : `DATA_DIR/backups`, 10 copies gardées (`VACUUM INTO`). Un échec prévient sur Discord sans bloquer le lancement.
 

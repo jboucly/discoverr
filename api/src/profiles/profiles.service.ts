@@ -2,23 +2,9 @@ import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleIni
 import { artistKey, now } from "../common/text";
 import { DatabaseService } from "../db/database.service";
 import { env } from "../env";
+import type { Profile, ProfileInput } from "../contracts";
 
-export interface Profile {
-  id: number;
-  name: string;
-  lastfmUser: string;
-  /** Jeton Plex de l'utilisateur (notes et playlist à son nom) ; null = jeton administrateur. */
-  plexToken: string | null;
-  playlistTitle: string;
-  tracks: number;
-  likedSubdir: string;
-  /** Les candidats attendent une validation dans l'interface avant téléchargement. */
-  reviewMode: boolean;
-  enabled: boolean;
-  createdAt: string;
-}
-
-export type ProfileInput = Omit<Profile, "id" | "createdAt">;
+export type { Profile, ProfileInput };
 
 interface Row {
   id: number;

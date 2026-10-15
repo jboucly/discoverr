@@ -7,11 +7,12 @@ discoverr builds a weekly "Discover Weekly"-style Plex playlist from Last.fm lis
 ## Commands
 
 ```bash
-cd api && npm ci && npm run typecheck   # type-check the API (src + test)
-cd api && npm test                       # integration tests (node:test, fake Plex/pickarr over HTTP)
-cd api && npm run build && npm start     # build and run the API (needs the env vars from .env.example)
-cd web && npm ci && npm run dev          # Vite dev server on :5175, proxies /api to localhost:3000
-cd web && npm run build                  # vue-tsc + vite build
+pnpm install                             # whole workspace (pnpm 10, version pinned in package.json packageManager)
+pnpm typecheck                           # api (src + test) and web
+pnpm test                                # integration tests (node:test, fake Plex/pickarr over HTTP)
+pnpm build                               # both packages
+cd api && pnpm build && pnpm start       # run the API (needs the env vars from api/.env.example)
+cd web && pnpm dev                       # Vite dev server on :5175, proxies /api to localhost:3000
 docker build -t discoverr .              # full image (front + API)
 ```
 
@@ -19,9 +20,10 @@ Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/worl
 
 ## Architecture
 
-One container, two packages built by [Dockerfile](Dockerfile):
+A pnpm workspace ([pnpm-workspace.yaml](pnpm-workspace.yaml)) with two packages, built into one container by [Dockerfile](Dockerfile) (`pnpm deploy --prod` extracts the API with its production dependencies). pnpm does not hoist: declare every package you import.
 - [api/](api/) — NestJS 11 on Fastify, CommonJS, SQLite via Node's built-in `node:sqlite` (no native deps; migrations in `src/db/migrations.ts`, append-only). Serves the built front and the JSON API under `/api`.
-- [web/](web/) — Vue 3 + Vite + vue-router, no UI library. `npm run dev` proxies `/api` to `localhost:3000`.
+- [web/](web/) — Vue 3 + Vite + vue-router, no UI library. `pnpm dev` proxies `/api` to `localhost:3000`.
+- API response types live in [api/src/contracts.ts](api/src/contracts.ts) (types only, no imports) and the front imports them as `discoverr-api/contracts` through [web/src/api.ts](web/src/api.ts). Change a response there, never by redeclaring a type in web/; internal types and `…Dto` (what leaves the API: no Plex token, no file path) are kept separate.
 
 Cycle per profile (`discovery/discovery.service.ts`): Last.fm candidates → YouTube Music link + Deezer 30 s preview → week `review` (if the profile has review mode, waits for approval in the UI or auto-approval after `reviewAutoApproveHours`) → `downloading` (picks sent to **pickarr-discovery**, a second pickarr instance writing only to `Musiques/Decouvertes`, needed because pickarr has a single output folder) → `active` (Plex playlist replaced) → then the previous active weeks are cleaned (`discovery/cleanup.service.ts`): tracks rated ≥ `likedMinRating`, kept in the UI, or in another manual playlist are moved to `Musiques/<likedSubdir>` and re-rated; the rest are deleted.
 

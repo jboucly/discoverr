@@ -292,16 +292,16 @@ discoverr/
 
 ```bash
 # API (port 3000)
-cd api && npm ci
+pnpm install
+cd api
 cp ../.env.example .env   # then export the variables, with DATA_DIR and MUSIC_ROOT as local paths
-npm run build && npm start
+pnpm build && pnpm start
 
 # Front (port 5175, /api proxied to localhost:3000)
-cd web && npm ci && npm run dev
+cd web && pnpm dev
 
 # Checks
-cd api && npm run typecheck && npm test
-cd web && npm run typecheck
+pnpm typecheck && pnpm test
 
 # Image
 docker build -t discoverr .

@@ -1,28 +1,9 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { validateCronExpression } from "cron";
 import { DatabaseService } from "../db/database.service";
+import type { Settings } from "../contracts";
 
-export interface Settings {
-  /** Planification du lancement hebdomadaire (expression cron, fuseau TZ). */
-  cron: string;
-  /** Lancement planifié actif. */
-  scheduleEnabled: boolean;
-  /** Ne télécharge, ne déplace et ne supprime rien : journalise seulement. */
-  dryRun: boolean;
-  /** Note Plex minimale pour qu'un titre compte comme aimé (❤️ = 10). */
-  likedMinRating: number;
-  /** Un titre ajouté à une autre playlist manuelle est gardé. */
-  keepIfInOtherPlaylist: boolean;
-  /** Part de titres d'artistes jamais écoutés (0 à 1). */
-  newArtistRatio: number;
-  maxPerArtist: number;
-  /** Délai max d'attente des téléchargements pickarr. */
-  pickarrTimeoutHours: number;
-  /** En mode validation : délai après lequel les candidats sont validés d'office (0 = jamais). */
-  reviewAutoApproveHours: number;
-  discordWebhookUrl: string;
-  notifySuccess: boolean;
-}
+export type { Settings };
 
 export const DEFAULT_SETTINGS: Settings = {
   cron: "0 3 * * 1",

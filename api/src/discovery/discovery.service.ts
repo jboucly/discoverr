@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import type { Activity } from "../contracts";
 import { DatabaseService } from "../db/database.service";
 import { discoveryDir, toPlexPath } from "../env";
 import { DeezerService } from "../integrations/deezer.service";
@@ -20,15 +21,6 @@ class StepError extends Error {
   ) {
     super(cause instanceof Error ? cause.message : String(cause));
   }
-}
-
-export interface Activity {
-  profileId: number;
-  trigger: RunTrigger;
-  step: string;
-  startedAt: string;
-  done?: number;
-  total?: number;
 }
 
 /**

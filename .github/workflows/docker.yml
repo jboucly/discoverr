@@ -16,15 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version lue dans packageManager (package.json racine)
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: API
-        working-directory: api
-        run: npm ci && npm run typecheck && npm test && npm run build
-      - name: Front
-        working-directory: web
-        run: npm ci && npm run build
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
 
   build:
     needs: check

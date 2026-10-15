@@ -1,21 +1,13 @@
 import { Injectable } from "@nestjs/common";
+import type { Stats, WeekStat } from "../contracts";
 import { DatabaseService } from "../db/database.service";
-
-export interface WeekStat {
-  weekId: number;
-  date: string;
-  proposed: number;
-  liked: number;
-  deleted: number;
-  failed: number;
-}
 
 /** Chiffres calculés sur l'historique en base. Une semaine compte dès qu'elle a été téléchargée. */
 @Injectable()
 export class StatsService {
   constructor(private readonly db: DatabaseService) {}
 
-  forProfile(profileId: number) {
+  forProfile(profileId: number): Stats {
     const weeks = this.db.all<WeekStat>(
       `SELECT w.id AS weekId, substr(w.created_at, 1, 10) AS date,
               SUM(t.status IN ('imported', 'pending', 'liked', 'deleted')) AS proposed,

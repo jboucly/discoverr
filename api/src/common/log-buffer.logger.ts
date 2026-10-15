@@ -1,11 +1,5 @@
 import { ConsoleLogger } from "@nestjs/common";
-
-export interface LogLine {
-  at: string;
-  level: string;
-  context?: string;
-  message: string;
-}
+import type { LogLine } from "../contracts";
 
 /** Les dernières lignes de log, gardées en mémoire pour la page « Journal ». */
 export const logBuffer: LogLine[] = [];

@@ -2,51 +2,9 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import type { SQLInputValue } from "node:sqlite";
 import { now } from "../common/text";
 import { DatabaseService } from "../db/database.service";
+import type { Track, TrackStatus, Week, WeekStatus } from "../contracts";
 
-export type WeekStatus = "dryrun" | "review" | "downloading" | "active" | "cleaned";
-export type TrackStatus =
-  | "candidate" // proposé, en attente de validation
-  | "rejected" // écarté à la validation
-  | "queued" // validé, envoyé (ou à envoyer) à pickarr
-  | "imported" // dans la bibliothèque et la playlist
-  | "failed" // téléchargement en échec
-  | "pending" // ménage reporté (doute, Plex injoignable)
-  | "liked" // gardé et déplacé
-  | "deleted"; // supprimé au ménage
-
-export interface Week {
-  id: number;
-  profileId: number;
-  status: WeekStatus;
-  createdAt: string;
-  activatedAt: string | null;
-  cleanedAt: string | null;
-}
-
-export interface Track {
-  id: number;
-  weekId: number;
-  artist: string;
-  title: string;
-  key: string;
-  kind: "similar" | "new-artist";
-  score: number;
-  status: TrackStatus;
-  link: string | null;
-  previewUrl: string | null;
-  coverUrl: string | null;
-  pickId: number | null;
-  file: string | null;
-  ratingKey: string | null;
-  rating: number | null;
-  keep: boolean;
-  lossless: boolean | null;
-  origin: string | null;
-  quality: string | null;
-  error: string | null;
-  position: number;
-  updatedAt: string;
-}
+export type { Track, TrackStatus, Week, WeekStatus };
 
 const toWeek = (r: Record<string, unknown>): Week => ({
   id: r.id as number,

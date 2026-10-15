@@ -1,20 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { now } from "../common/text";
+import type { Run, RunTrigger } from "../contracts";
 import { DatabaseService } from "../db/database.service";
 
-export type RunTrigger = "cron" | "manual" | "review" | "auto-approve";
-
-export interface Run {
-  id: number;
-  profileId: number | null;
-  trigger: RunTrigger;
-  dryRun: boolean;
-  startedAt: string;
-  finishedAt: string | null;
-  ok: boolean | null;
-  step: string | null;
-  error: string | null;
-}
+export type { Run, RunTrigger };
 
 const toRun = (r: Record<string, unknown>): Run => ({
   id: r.id as number,

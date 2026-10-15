@@ -1,6 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from "@nestjs/common";
 import { Public } from "./auth/auth.guard";
 import { logBuffer } from "./common/log-buffer.logger";
+import type { LogLine } from "./contracts";
 import { HealthService } from "./health/health.service";
 import { ProfilesService } from "./profiles/profiles.service";
 import { StatsService } from "./stats/stats.service";
@@ -32,7 +33,7 @@ export class MiscController {
   }
 
   @Get("logs")
-  logs(@Query("after") after?: string) {
+  logs(@Query("after") after?: string): LogLine[] {
     return after ? logBuffer.filter((l) => l.at > after) : logBuffer.slice(-300);
   }
 }

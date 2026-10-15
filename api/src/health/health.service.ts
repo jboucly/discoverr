@@ -1,17 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import type { Check } from "../contracts";
 import { discoveryDir, env, musicDir, sharedPickarrLibrary, toPlexPath } from "../env";
 import { LastfmService } from "../integrations/lastfm.service";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService } from "../integrations/plex.service";
 import { ProfilesService } from "../profiles/profiles.service";
-
-export interface Check {
-  name: string;
-  ok: boolean;
-  detail: string;
-}
 
 const gb = (bytes: number) => `${(bytes / 1024 ** 3).toFixed(1)} Go`;
 

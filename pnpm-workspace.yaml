@@ -1,0 +1,11 @@
+packages:
+  - api
+  - web
+
+# pnpm 10 bloque les scripts d'installation par défaut : esbuild (Vite) a besoin du sien.
+onlyBuiltDependencies:
+  - esbuild
+
+# Dépendance de ytmusic-api, son script d'installation est inutile.
+ignoredBuiltDependencies:
+  - '@biomejs/biome'

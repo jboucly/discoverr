@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
+import type { Status, TrackDto, WeekDto } from "../contracts";
 import { ProfilesService } from "../profiles/profiles.service";
 import { PlexService } from "../integrations/plex.service";
 import { SettingsService } from "../settings/settings.service";
@@ -8,7 +9,7 @@ import { SchedulerService } from "./scheduler.service";
 import { WeeksRepository, type Track } from "./weeks.repository";
 
 /** Ce que le navigateur voit d'un titre (sans chemin de fichier). */
-const trackDto = ({ file, ...t }: Track, liveRating?: number | null) => ({
+const trackDto = ({ file, ...t }: Track, liveRating?: number | null): TrackDto => ({
   ...t,
   hasFile: !!file,
   rating: liveRating === undefined ? t.rating : liveRating,
@@ -27,7 +28,7 @@ export class DiscoveryController {
   ) {}
 
   @Get("status")
-  status() {
+  status(): Status {
     const settings = this.settings.get();
     return {
       activity: this.discovery.activity(),
@@ -55,7 +56,7 @@ export class DiscoveryController {
 
   /** Semaines d'un profil ; pour les semaines en cours, la note ❤️ est lue en direct dans Plex. */
   @Get("profiles/:id/weeks")
-  async list(@Param("id", ParseIntPipe) id: number, @Query("limit") limit?: string) {
+  async list(@Param("id", ParseIntPipe) id: number, @Query("limit") limit?: string): Promise<WeekDto[]> {
     const profile = this.profiles.get(id);
     const token = profile.plexToken ?? undefined;
     const weeks = this.weeks.weeks(id, Math.min(Number(limit) || 20, 100));

@@ -98,12 +98,16 @@ export class PlexService {
     return false;
   }
 
-  /** Trouve l'élément d'un fichier, en laissant au scan le temps de l'ajouter (jusqu'à `waitMs`). */
+  /**
+   * Trouve l'élément d'un fichier, en laissant au scan le temps de l'ajouter (jusqu'à `waitMs`).
+   * La recherche se fait sur le titre sans version : Last.fm écrit « Machete - A.M.C Remix », les tags de pickarr
+   * « Machete (A.M.C Remix) », et Plex ne cherche que par sous-chaîne. Le chemin du fichier départage ensuite.
+   */
   async findByFile(plexPath: string, title: string, token = env.plex.token, waitMs = 5 * 60_000): Promise<PlexTrack | null> {
     const section = await this.sectionFor(plexPath);
     const deadline = Date.now() + waitMs;
     do {
-      const found = (await this.searchTracks(section, title, token)).find((t) => this.files(t).includes(plexPath));
+      const found = (await this.searchTracks(section, stripVersion(title), token)).find((t) => this.files(t).includes(plexPath));
       if (found) return found;
       if (waitMs > 0) await sleep(15_000);
     } while (Date.now() < deadline);

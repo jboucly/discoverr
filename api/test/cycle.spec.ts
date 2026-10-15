@@ -47,6 +47,17 @@ describe("cycle", () => {
     assert.ok(w.discord.messages.some((m) => m.level === "summary" && m.text.includes("**3** titres")));
   });
 
+  test("titre tagué autrement que sur Last.fm : retrouvé dans Plex par son fichier", async () => {
+    const profile = w.addProfile({ tracks: 1 });
+    w.pickarr.taggedTitles.set("Machete - A.M.C Remix", "Machete (A.M.C Remix)");
+    const run = await w.run(profile.id, [candidate("Sota", "Machete - A.M.C Remix")]);
+
+    assert.equal(run.ok, true, run.error ?? "");
+    const [track] = w.weeks.tracks(w.weeks.weeks(profile.id)[0]!.id);
+    assert.ok(track!.ratingKey, "titre introuvable dans Plex");
+    assert.deepEqual(w.plex.playlistKeys("Découvertes de la semaine"), [track!.ratingKey]);
+  });
+
   test("mode validation : rien n'est téléchargé avant l'approbation, les titres écartés ne le sont jamais", async () => {
     const profile = w.addProfile({ tracks: 2, reviewMode: true });
     const run = await w.run(profile.id, [candidate("A", "1"), candidate("B", "2"), candidate("C", "3"), candidate("D", "4")]);

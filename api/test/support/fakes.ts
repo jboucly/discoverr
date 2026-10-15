@@ -265,6 +265,8 @@ export class FakePickarr {
   readonly picks = new Map<number, object>();
   readonly posts: { url: string; subfolder?: string }[] = [];
   readonly deleted: number[] = [];
+  /** Titre écrit dans les tags quand pickarr ne garde pas celui du lien (« A - B Remix » -> « A (B Remix) »). */
+  readonly taggedTitles = new Map<string, string>();
   private nextId = 1;
 
   constructor(public libraryRoot: string) {}
@@ -291,7 +293,7 @@ export class FakePickarr {
 
       if (libraryFile) {
         const file = path.join(this.libraryRoot, libraryFile);
-        writeAudio(file, artist, title);
+        writeAudio(file, artist, this.taggedTitles.get(title) ?? title);
         writeFileSync(path.join(path.dirname(file), "cover.jpg"), "");
       }
 

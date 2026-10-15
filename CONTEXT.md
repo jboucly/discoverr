@@ -95,7 +95,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 ## Points en suspens
 
 ### Avant le premier déploiement
-> **Déployé le 15/10/2026** sur le LXC via Portainer (image `ghcr.io/jboucly/discoverr:latest`, publique), avec `pickarr-discovery`. Première simulation réussie le 15/10 à 21:11 (profil renommé « Julien »). Page État au vert ; slskd réparé par un `docker restart` (gluetun recréé par la mise à jour de la stack). Restent : premier vrai lancement, puis le premier ménage au cycle du 19/10.
+> **Déployé le 15/10/2026** sur le LXC via Portainer (image `ghcr.io/jboucly/discoverr:latest`, publique), avec `pickarr-discovery`. Première simulation réussie le 15/10 à 21:11 (profil renommé « Julien »). Page État au vert ; slskd réparé par un `docker restart` (gluetun recréé par la mise à jour de la stack). Premier vrai lancement réussi le 15/10 à 21:42 : 21 picks, 20 importés (surtout FLAC via Soulseek, 2 en AAC via YouTube, 1 échec), playlist créée. Un titre (« Machete - A.M.C Remix ») n'a pas été retrouvé dans Plex : corrigé ensuite (`162fac5`). Reste : le premier ménage au cycle du 19/10, avec des ❤️ posés d'ici là.
 
 - [x] **Push** sur `github.com/jboucly/discoverr` (les commits sont locaux). Laisser la CI publier l'image, puis passer le package `discoverr` en **Public** dans les réglages du package GitHub.
 - [x] **Licence :** GPL-3.0 (fichier `LICENSE`), parce que l'image embarque `ytmusic-api`, sous GPL-3.0.

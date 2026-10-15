@@ -298,7 +298,7 @@ npm run build && npm start
 cd web && npm ci && npm run dev
 
 # Vérifications
-cd api && npm run typecheck
+cd api && npm run typecheck && npm test
 cd web && npm run typecheck
 
 # Image

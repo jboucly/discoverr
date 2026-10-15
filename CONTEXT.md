@@ -126,9 +126,10 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - Playlist **« Radar »** : nouvelles sorties des artistes gardés.
 
 ### Fait depuis
+- Tests d'intégration (`npm test` dans `api/`, lancés par la CI) : cycle complet, validation, reprise, ménage (❤️ / Garder / autre playlist, suppression, fichier partagé entre profils, Plex injoignable, titre introuvable), garde-fou de la bibliothèque pickarr partagée.
+- Bug corrigé grâce aux tests : avec deux profils sur le même compte Plex, la playlist discoverr de l'un comptait comme « autre playlist » pour l'autre, et un titre proposé aux deux était toujours gardé. Les playlists des profils du même compte sont maintenant ignorées.
 - Sauvegarde de la base avant chaque lancement : `DATA_DIR/backups`, 10 copies gardées (`VACUUM INTO`). Un échec prévient sur Discord sans bloquer le lancement.
 
 ### Petites dettes connues
 - Le compose de media-server déclare encore `version: "3.8"` (obsolète, ignoré par Docker).
 - Le choix entre « titres similaires » et « nouveaux artistes » se fait par quota simple. L'ordre final est mélangé par Fisher-Yates (`shuffle` dans `common/text.ts`).
-- Pas de suite de tests. Le faux Plex et le faux pickarr écrits pour le test du cycle complet (un `mock.js` d'environ 120 lignes) n'ont pas été gardés dans le repo. Ils pourraient servir de base à des tests d'intégration.

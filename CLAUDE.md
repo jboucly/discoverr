@@ -7,14 +7,15 @@ discoverr builds a weekly "Discover Weekly"-style Plex playlist from Last.fm lis
 ## Commands
 
 ```bash
-cd api && npm ci && npm run typecheck   # type-check the API
+cd api && npm ci && npm run typecheck   # type-check the API (src + test)
+cd api && npm test                       # integration tests (node:test, fake Plex/pickarr over HTTP)
 cd api && npm run build && npm start     # build and run the API (needs the env vars from .env.example)
 cd web && npm ci && npm run dev          # Vite dev server on :5175, proxies /api to localhost:3000
 cd web && npm run build                  # vue-tsc + vite build
 docker build -t discoverr .              # full image (front + API)
 ```
 
-There is no test suite. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags).
+Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/world.ts` wires the real services to a temp database and music folder, a fake Plex that indexes the real files (a moved file becomes a new unrated item) and a fake pickarr; Last.fm, YouTube Music, Deezer and Discord are stubbed. Add a scenario there when changing the cycle or the cleanup. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks, tests and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags).
 
 ## Architecture
 

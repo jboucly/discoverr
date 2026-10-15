@@ -206,7 +206,8 @@ Only secrets, URLs and paths live in the environment. Everything else is set in 
 | `PICKARR_URL` | `http://pickarr-discovery:8080` | Discovery pickarr instance. |
 | `PICKARR_API_KEY` | — | Its API key (`Pickarr__ApiKey`). **Required.** |
 | `PICKARR_LIBRARY_SUBDIR` | `Decouvertes` | Folder, under `MUSIC_ROOT`, matching this pickarr instance's library folder. |
-| `PICKARR_SUBFOLDER` | *(empty)* | For a future pickarr version that writes to a subfolder: sent with each link. |
+| `PICKARR_SUBFOLDER` | *(empty)* | Subfolder of the pickarr library sent with each link (e.g. `Decouvertes`), to use the main pickarr instead of a dedicated one. Then `DISCOVERY_SUBDIR` must be `PICKARR_LIBRARY_SUBDIR/PICKARR_SUBFOLDER`. |
+| `ALLOW_DELETE_IN_PICKARR_LIBRARY` | `false` | Required (`true`) for the cleanup to delete files when discoveries live inside a shared pickarr library (`DISCOVERY_SUBDIR` ≠ `PICKARR_LIBRARY_SUBDIR`). Otherwise unliked tracks are kept as pending. |
 | `MUSIC_ROOT` | `/music` | The music folder, as seen by discoverr. |
 | `PLEX_MUSIC_ROOT` | `/media/Musiques` | The same folder, as seen by Plex. |
 | `DISCOVERY_SUBDIR` | `Decouvertes` | Discoveries folder, under `MUSIC_ROOT`. |
@@ -326,6 +327,8 @@ docker build -t discoverr .
 ---
 
 ## Credits and licenses
+
+discoverr is licensed under the [GNU GPL v3](LICENSE).
 
 - [pickarr](https://gitlab.com/dhmetha/pickarr) by dhmetha: downloading, tagging and importing into Plex.
 - [Last.fm API](https://www.last.fm/api), [Deezer API](https://developers.deezer.com/api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (GPL-3.0 license).

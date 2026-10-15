@@ -33,6 +33,8 @@ export const env = {
     subfolder: read("PICKARR_SUBFOLDER", ""),
     /** Dossier (sous MUSIC_ROOT) qui correspond au LibraryPath de l'instance pickarr appelée. */
     librarySubdir: subdir(read("PICKARR_LIBRARY_SUBDIR", "Decouvertes")),
+    /** Accord explicite pour supprimer dans la bibliothèque d'un pickarr partagé (voir sharedPickarrLibrary). */
+    allowDeleteInLibrary: read("ALLOW_DELETE_IN_PICKARR_LIBRARY", "false").toLowerCase() === "true",
   },
 
   plex: {
@@ -51,6 +53,12 @@ export const env = {
 };
 
 export const discoveryDir = () => path.join(env.paths.musicRoot, env.paths.discoverySubdir);
+/**
+ * Les découvertes vivent dans la bibliothèque d'un pickarr qui sert aussi à autre chose (le principal, via PICKARR_SUBFOLDER)
+ * au lieu d'une instance dédiée : le ménage n'y supprime rien sans ALLOW_DELETE_IN_PICKARR_LIBRARY=true.
+ */
+export const sharedPickarrLibrary = () => env.paths.discoverySubdir !== env.pickarr.librarySubdir;
+
 export const musicDir = (sub: string) => path.join(env.paths.musicRoot, subdir(sub));
 
 /** Chemin vu par discoverr -> chemin vu par Plex. */

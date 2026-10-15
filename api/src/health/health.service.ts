@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { promises as fs } from "node:fs";
-import { discoveryDir, env, musicDir, toPlexPath } from "../env";
+import path from "node:path";
+import { discoveryDir, env, musicDir, sharedPickarrLibrary, toPlexPath } from "../env";
 import { LastfmService } from "../integrations/lastfm.service";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService } from "../integrations/plex.service";
@@ -50,6 +51,18 @@ export class HealthService {
         if (!(await this.plex.folderInLibrary(toPlexPath(discoveryDir())))) throw new Error(`${toPlexPath(discoveryDir())} n'est dans aucune bibliothèque musicale Plex`);
         return `${discoveryDir()} : accessible en écriture et dans Plex`;
       }),
+      ...(sharedPickarrLibrary()
+        ? [
+            this.check("Bibliothèque pickarr partagée", async () => {
+              const expected = path.posix.join(env.pickarr.librarySubdir, env.pickarr.subfolder);
+              if (!env.pickarr.subfolder || expected !== env.paths.discoverySubdir) {
+                throw new Error(`DISCOVERY_SUBDIR (${env.paths.discoverySubdir}) doit valoir PICKARR_LIBRARY_SUBDIR/PICKARR_SUBFOLDER (${expected})`);
+              }
+              if (!env.pickarr.allowDeleteInLibrary) throw new Error("ALLOW_DELETE_IN_PICKARR_LIBRARY n'est pas à true : le ménage ne supprimera rien");
+              return `suppression autorisée dans ${discoveryDir()}`;
+            }),
+          ]
+        : []),
       this.check("Espace disque", async () => {
         const s = await fs.statfs(env.paths.musicRoot);
         const free = s.bavail * s.bsize;

@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { sleep } from "../common/text";
-import { discoveryDir, env, musicDir, toPlexPath } from "../env";
+import { discoveryDir, env, musicDir, sharedPickarrLibrary, toPlexPath } from "../env";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService, type PlexTrack } from "../integrations/plex.service";
 import type { Profile } from "../profiles/profiles.service";
@@ -101,6 +101,9 @@ export class CleanupService {
 
   private async deleteTrack(track: Track, dryRun: boolean, result: CleanupResult) {
     const file = track.file!;
+    if (sharedPickarrLibrary() && !env.pickarr.allowDeleteInLibrary) {
+      throw new Error(`Suppression refusée : ${discoveryDir()} est dans la bibliothèque de pickarr, il faut ALLOW_DELETE_IN_PICKARR_LIBRARY=true`);
+    }
     // Le même fichier est encore proposé ailleurs (autre profil, autre semaine) : on le laisse à cette autre semaine.
     const shared = this.weeks.othersUsingFile(file, track.id).length > 0;
     if (!shared) await this.assertInDiscovery(file);

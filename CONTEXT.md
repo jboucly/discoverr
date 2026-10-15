@@ -97,7 +97,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 
 ### Avant le premier déploiement
 - [ ] **Push** sur `github.com/jboucly/discoverr` (les commits sont locaux). Laisser la CI publier l'image, puis passer le package `discoverr` en **Public** dans les réglages du package GitHub.
-- [ ] **Licence :** il n'y a pas encore de fichier `LICENSE`. `ytmusic-api` est sous GPL-3.0 : à prendre en compte dans le choix.
+- [x] **Licence :** GPL-3.0 (fichier `LICENSE`), parce que l'image embarque `ytmusic-api`, sous GPL-3.0.
 - [ ] **Dans media-server**, le dossier `discoverr/` a été déplacé ici. Le compose de media-server référence seulement l'image. Il reste à commiter ce retrait dans media-server, et à mettre à jour son `CLAUDE.md`, qui pointe encore vers `discoverr/README.md` et `discoverr/CLAUDE.md`.
 - [ ] **Sur le LXC :**
   ```bash
@@ -110,11 +110,11 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - [ ] **Premier lancement en simulation** (actif par défaut au premier démarrage), page **État** au vert, puis désactiver la simulation dans Réglages.
 
 ### À demander à dhmetha (pickarr)
-- [ ] Ajouter un champ « dossier » à `POST /api/picks`, par exemple `{ "url", "autoImport", "subfolder": "Decouvertes" }`. Côté discoverr, tout est prêt :
-  1. pointer `PICKARR_URL` vers le pickarr principal ;
-  2. renseigner `PICKARR_SUBFOLDER` ;
-  3. ajuster `PICKARR_LIBRARY_SUBDIR` ;
-  4. supprimer `pickarr-discovery` du compose.
+- [x] Champ `subfolder` sur `POST /api/picks` : mergé le 14/10/2026 (MR !1), **pas encore dans l'image** `unetha` (construite le 08/10, sans CI : dhmetha la pousse à la main). Le sous-dossier est créé **sous la bibliothèque de pickarr** (`..` refusé) : avec le pickarr principal, les découvertes iront dans `Musiques/pickarr/Decouvertes`. Julien accepte que le ménage y supprime, à condition d'un accord explicite. Bascule une fois l'image publiée :
+  1. `PICKARR_URL=http://pickarr:8080`, `PICKARR_API_KEY` du principal ;
+  2. `PICKARR_SUBFOLDER=Decouvertes`, `PICKARR_LIBRARY_SUBDIR=pickarr`, `DISCOVERY_SUBDIR=pickarr/Decouvertes` ;
+  3. `ALLOW_DELETE_IN_PICKARR_LIBRARY=true` (sans elle, le ménage ne supprime rien et la page État est en rouge) ;
+  4. vérifier que `Musiques/pickarr/Decouvertes` est vu par Plex, puis supprimer `pickarr-discovery` du compose.
 - [ ] Éventuellement : une option pour un cookie non `Secure` en HTTP local.
 
 ### Idées d'évolution proposées, non choisies

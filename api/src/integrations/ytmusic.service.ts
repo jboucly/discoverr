@@ -19,10 +19,10 @@ export class YtmusicService {
   }
 
   /**
-   * Lien YouTube Music du titre, que pickarr sait lire. Pickarr retrouve ensuite les tags sur Deezer et cherche
-   * d'abord sur Soulseek : ce lien sert surtout à identifier le morceau. null si rien ne correspond vraiment.
+   * Lien YouTube Music du titre, que pickarr sait lire (il retrouve ensuite les tags et cherche d'abord sur Soulseek :
+   * ce lien sert surtout à identifier le morceau), et sa pochette. null si rien ne correspond vraiment.
    */
-  async findLink(artist: string, title: string): Promise<string | null> {
+  async findSong(artist: string, title: string): Promise<{ link: string; coverUrl: string | null } | null> {
     const songs = await (await this.ytmusic()).searchSongs(`${artist} ${title}`);
     const wantedArtist = normalize(mainArtist(artist));
     const wantedTitle = normalize(title);
@@ -36,6 +36,12 @@ export class YtmusicService {
         (songTitle === wantedTitle || songTitle.startsWith(wantedTitle) || wantedTitle.startsWith(songTitle))
       );
     });
-    return match ? `https://music.youtube.com/watch?v=${match.videoId}` : null;
+    if (!match) return null;
+    // Vignettes de 60 et 120 px : la taille est dans l'URL (…=w120-h120-l90-rj), on en demande une plus grande.
+    const thumbnail = [...match.thumbnails].sort((a, b) => b.width - a.width)[0]?.url;
+    return {
+      link: `https://music.youtube.com/watch?v=${match.videoId}`,
+      coverUrl: thumbnail?.replace(/=w\d+-h\d+/, "=w300-h300") ?? null,
+    };
   }
 }

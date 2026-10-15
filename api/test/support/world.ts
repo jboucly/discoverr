@@ -91,8 +91,8 @@ export async function createWorld(options: WorldOptions = {}) {
       this.messages.push({ level: "summary", title, text: lines.join("\n") });
     },
   };
-  const ytmusic = { findLink: async (artist: string, title: string) => ytLink(artist, title) };
-  const deezer = { preview: async () => ({ previewUrl: null, coverUrl: null }) };
+  const ytmusic = { findSong: async (artist: string, title: string) => ({ link: ytLink(artist, title), coverUrl: null }) };
+  const itunes = { preview: async () => null };
 
   const newDiscovery = () =>
     new DiscoveryService(
@@ -101,7 +101,7 @@ export async function createWorld(options: WorldOptions = {}) {
       weeks,
       runs,
       lastfm as never,
-      deezer as never,
+      itunes as never,
       pickarrService,
       plexService,
       cleanup,

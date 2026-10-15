@@ -34,9 +34,9 @@ Chaque semaine, discoverr choisit des titres que tu n'as jamais écoutés à par
 ## Comment ça marche
 
 ```
-          Last.fm                 YouTube Music + Deezer            pickarr-discovery              Plex
-   (tes écoutes, titres    ──►   (lien du titre, extrait    ──►   (Soulseek, sinon YouTube,  ──►  playlist
-    et artistes similaires)        de 30 s, pochette)               tags Deezer, rangement)         « Découvertes »
+          Last.fm                 YouTube Music + iTunes            pickarr-discovery              Plex
+   (tes écoutes, titres    ──►   (lien et pochette,         ──►   (Soulseek, sinon YouTube,  ──►  playlist
+    et artistes similaires)        extrait de 30 s)                 tags Deezer, rangement)         « Découvertes »
 ```
 
 Chaque semaine (lundi 3 h par défaut), pour chaque profil actif :
@@ -281,7 +281,7 @@ discoverr/
 ├── api/        NestJS 11 + Fastify, SQLite (node:sqlite intégré à Node 22)
 │   └── src/
 │       ├── discovery/     cycle, ménage, planification, semaines et lancements
-│       ├── integrations/  Last.fm, YouTube Music, Deezer, pickarr, Plex, Discord
+│       ├── integrations/  Last.fm, YouTube Music, iTunes, pickarr, Plex, Discord
 │       ├── profiles/  settings/  stats/  health/  auth/
 │       └── db/            connexion et migrations
 ├── web/        Vue 3 + Vite + vue-router
@@ -318,7 +318,7 @@ docker build -t discoverr .
 
 - **Recommandations :** elles ne valent que ce que vaut ton historique Last.fm. Quelques semaines de scrobbling sont nécessaires.
 - **Liens YouTube Music :** la recherche passe par une bibliothèque non officielle (`ytmusic-api`). Un titre introuvable est simplement ignoré.
-- **Extraits Deezer :** ils viennent de l'API publique de Deezer. S'ils sont indisponibles, le titre n'a pas d'extrait, mais tout le reste fonctionne.
+- **Extraits :** les extraits de 30 s viennent de l'API de recherche iTunes (une vingtaine d'appels par minute, donc la sélection prend quelques minutes ; mise en pause une heure si Apple refuse). Les pochettes viennent de YouTube Music. Un titre sans extrait reste proposé. Deezer n'est pas utilisé : son CDN peut bloquer entièrement une IP résidentielle.
 - **pickarr :** une instance dédiée est nécessaire tant que pickarr ne sait pas écrire dans un sous-dossier par lien.
 - **Une seule instance de discoverr à la fois :** l'état est dans une base SQLite locale.
 
@@ -329,6 +329,6 @@ docker build -t discoverr .
 discoverr est sous licence [GNU GPL v3](LICENSE).
 
 - [pickarr](https://gitlab.com/dhmetha/pickarr) par dhmetha : téléchargement, taggage et import dans Plex.
-- [Last.fm API](https://www.last.fm/api), [Deezer API](https://developers.deezer.com/api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (licence GPL-3.0).
+- [Last.fm API](https://www.last.fm/api), [API de recherche iTunes](https://performance-partners.apple.com/search-api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (licence GPL-3.0).
 
 discoverr ne fait que trouver des titres et les confier à pickarr : c'est à toi de t'assurer que ce que tu télécharges respecte le droit applicable dans ton pays.

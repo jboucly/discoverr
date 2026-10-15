@@ -86,7 +86,6 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
   - la note des ❤️ Plexamp, supposée à 10 ;
   - le comportement réel après un déplacement : la note est-elle perdue ?
   - `emptyTrash` après suppression.
-- [ ] **Extraits Deezer** : l'API répond toujours « Access Denied » depuis le Mac (Akamai), même lors du test du 14/10 au soir. Le code continue sans extrait, mais il faut tester depuis le serveur.
 - [ ] **pickarr réel** : forme des réponses (`libraryFile` relatif au dossier de bibliothèque), comportement avec `autoImport` et en cas de conflit.
 - [ ] **Profils avec un jeton Plex d'utilisateur géré** : playlists et notes sur un autre compte.
 - [ ] La CI GitHub Actions n'a jamais tourné.
@@ -96,7 +95,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 ## Points en suspens
 
 ### Avant le premier déploiement
-> **Déployé le 15/10/2026** sur le LXC via Portainer (image `ghcr.io/jboucly/discoverr:latest`, publique), avec `pickarr-discovery`. Première simulation réussie le 15/10 à 21:11 (profil renommé « Julien »). Restent : extraits Deezer depuis le serveur, slskd joignable par `pickarr-discovery` (« Connection refused (gluetun:5030) » au démarrage), premier vrai lancement, puis le premier ménage au cycle du 19/10.
+> **Déployé le 15/10/2026** sur le LXC via Portainer (image `ghcr.io/jboucly/discoverr:latest`, publique), avec `pickarr-discovery`. Première simulation réussie le 15/10 à 21:11 (profil renommé « Julien »). Page État au vert ; slskd réparé par un `docker restart` (gluetun recréé par la mise à jour de la stack). Restent : premier vrai lancement, puis le premier ménage au cycle du 19/10.
 
 - [x] **Push** sur `github.com/jboucly/discoverr` (les commits sont locaux). Laisser la CI publier l'image, puis passer le package `discoverr` en **Public** dans les réglages du package GitHub.
 - [x] **Licence :** GPL-3.0 (fichier `LICENSE`), parce que l'image embarque `ytmusic-api`, sous GPL-3.0.
@@ -128,6 +127,7 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - Playlist **« Radar »** : nouvelles sorties des artistes gardés.
 
 ### Fait depuis
+- **Deezer abandonné** (15/10/2026) : Akamai bloque toute l'IP publique de Julien (`api.deezer.com` et `www.deezer.com` en 403, depuis le Mac comme depuis le serveur), pas une limite de débit (qui répondrait `Quota limit exceeded`). Pochettes : vignette YouTube Music agrandie (`=w300-h300`). Extraits : API iTunes, recherche stricte (environ 2 titres sur 3 trouvés sur un échantillon drum & bass / phonk), 3 s entre appels, pause d'une heure après un 403/429. Contrôle « Extraits (iTunes) » sur la page État. pickarr utilise aussi Deezer pour ses tags : il continue sans (403 → null), mais les tags peuvent être moins complets ; à signaler à dhmetha.
 - **Workspace pnpm** (pnpm 10.30.3, figé par `packageManager`) : un seul `pnpm-lock.yaml`, commandes à la racine. Les types des réponses de l'API sont dans `api/src/contracts.ts` et le front les importe (`discoverr-api/contracts`) au lieu de les recopier. Versions identiques à npm sauf rollup 4.64.6 → 4.64.7 et `@vue/compiler-*` 3.5.44 tiré par vue-tsc (outillage de build seulement). `fastify` ajouté aux dépendances de l'API : il était importé sans être déclaré.
 - Tests d'intégration (`pnpm test`, lancés par la CI) : cycle complet, validation, reprise, ménage (❤️ / Garder / autre playlist, suppression, fichier partagé entre profils, Plex injoignable, titre introuvable), garde-fou de la bibliothèque pickarr partagée.
 - Bug corrigé grâce aux tests : avec deux profils sur le même compte Plex, la playlist discoverr de l'un comptait comme « autre playlist » pour l'autre, et un titre proposé aux deux était toujours gardé. Les playlists des profils du même compte sont maintenant ignorées.

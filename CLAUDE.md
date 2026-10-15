@@ -16,7 +16,7 @@ cd api && pnpm build && pnpm start       # run the API once, without watching
 docker build -t discoverr .              # full image (front + API)
 ```
 
-Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/world.ts` wires the real services to a temp database and music folder, a fake Plex that indexes the real files (a moved file becomes a new unrated item) and a fake pickarr; Last.fm, YouTube Music, Deezer and Discord are stubbed. Add a scenario there when changing the cycle or the cleanup. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks, tests and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags).
+Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/world.ts` wires the real services to a temp database and music folder, a fake Plex that indexes the real files (a moved file becomes a new unrated item) and a fake pickarr; Last.fm, YouTube Music, iTunes and Discord are stubbed. Add a scenario there when changing the cycle or the cleanup. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks, tests and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags).
 
 ## Architecture
 
@@ -25,7 +25,7 @@ A pnpm workspace ([pnpm-workspace.yaml](pnpm-workspace.yaml)) with two packages,
 - [web/](web/) — Vue 3 + Vite + vue-router, no UI library. `pnpm dev` proxies `/api` to `localhost:3000`.
 - API response types live in [api/src/contracts.ts](api/src/contracts.ts) (types only, no imports) and the front imports them as `discoverr-api/contracts` through [web/src/api.ts](web/src/api.ts). Change a response there, never by redeclaring a type in web/; internal types and `…Dto` (what leaves the API: no Plex token, no file path) are kept separate.
 
-Cycle per profile (`discovery/discovery.service.ts`): Last.fm candidates → YouTube Music link + Deezer 30 s preview → week `review` (if the profile has review mode, waits for approval in the UI or auto-approval after `reviewAutoApproveHours`) → `downloading` (picks sent to **pickarr-discovery**, a second pickarr instance writing only to `Musiques/Decouvertes`, needed because pickarr has a single output folder) → `active` (Plex playlist replaced) → then the previous active weeks are cleaned (`discovery/cleanup.service.ts`): tracks rated ≥ `likedMinRating`, kept in the UI, or in another manual playlist are moved to `Musiques/<likedSubdir>` and re-rated; the rest are deleted.
+Cycle per profile (`discovery/discovery.service.ts`): Last.fm candidates → YouTube Music link and cover + iTunes 30 s preview (throttled to ~20 calls/min; Deezer is deliberately not used, its CDN blocked the home IP) → week `review` (if the profile has review mode, waits for approval in the UI or auto-approval after `reviewAutoApproveHours`) → `downloading` (picks sent to **pickarr-discovery**, a second pickarr instance writing only to `Musiques/Decouvertes`, needed because pickarr has a single output folder) → `active` (Plex playlist replaced) → then the previous active weeks are cleaned (`discovery/cleanup.service.ts`): tracks rated ≥ `likedMinRating`, kept in the UI, or in another manual playlist are moved to `Musiques/<likedSubdir>` and re-rated; the rest are deleted.
 
 Invariants to preserve:
 - Never delete outside `Musiques/Decouvertes` (realpath check); on any doubt (Plex unreachable, item not found) keep the file, mark the track `pending`, and notify Discord. Pending tracks are retried on the next run.

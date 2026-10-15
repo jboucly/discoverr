@@ -2,8 +2,8 @@ import { BadRequestException, ConflictException, Injectable, Logger, OnModuleIni
 import type { Activity } from "../contracts";
 import { DatabaseService } from "../db/database.service";
 import { discoveryDir, toPlexPath } from "../env";
-import { DeezerService } from "../integrations/deezer.service";
 import { DiscordService } from "../integrations/discord.service";
+import { ItunesService } from "../integrations/itunes.service";
 import { LastfmService } from "../integrations/lastfm.service";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService } from "../integrations/plex.service";
@@ -39,7 +39,7 @@ export class DiscoveryService implements OnModuleInit {
     private readonly weeks: WeeksRepository,
     private readonly runs: RunsRepository,
     private readonly lastfm: LastfmService,
-    private readonly deezer: DeezerService,
+    private readonly itunes: ItunesService,
     private readonly pickarr: PickarrService,
     private readonly plex: PlexService,
     private readonly cleanup: CleanupService,
@@ -172,13 +172,13 @@ export class DiscoveryService implements OnModuleInit {
       const result = [];
       for (const [index, c] of candidates.entries()) {
         this.setStep(profile.id, "recherche des liens", index, candidates.length);
-        const link = await this.findLink(c.artist, c.title);
-        if (!link) {
+        const song = await this.findSong(c.artist, c.title);
+        if (!song) {
           this.logger.log(`✗ ${c.artist} - ${c.title} : introuvable sur YouTube Music`);
           continue;
         }
-        const { previewUrl, coverUrl } = await this.deezer.preview(c.artist, c.title);
-        result.push({ ...c, link, previewUrl, coverUrl, status: "candidate" as const, position: result.length });
+        const previewUrl = await this.itunes.preview(c.artist, c.title);
+        result.push({ ...c, link: song.link, previewUrl, coverUrl: song.coverUrl, status: "candidate" as const, position: result.length });
       }
       return result;
     });
@@ -189,8 +189,8 @@ export class DiscoveryService implements OnModuleInit {
     return week;
   }
 
-  private findLink(artist: string, title: string) {
-    return this.ytmusic.findLink(artist, title).catch(() => null);
+  private findSong(artist: string, title: string) {
+    return this.ytmusic.findSong(artist, title).catch(() => null);
   }
 
   /** Validation de la sélection depuis l'interface : les titres non écartés sont téléchargés. */

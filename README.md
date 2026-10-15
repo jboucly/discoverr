@@ -34,9 +34,9 @@ Every week, discoverr picks tracks you have never listened to based on your **La
 ## How it works
 
 ```
-          Last.fm                 YouTube Music + Deezer            pickarr-discovery              Plex
+          Last.fm                 YouTube Music + iTunes            pickarr-discovery              Plex
    (your scrobbles, similar ──►  (track link, 30 s         ──►   (Soulseek, else YouTube,   ──►  "Discoveries"
-    tracks and artists)           preview, cover art)              Deezer tags, filing)            playlist
+    tracks and artists)           cover art, preview)              Deezer tags, filing)            playlist
 ```
 
 Every week (Monday 3 AM by default), for each active profile:
@@ -283,7 +283,7 @@ discoverr/
 ├── api/        NestJS 11 + Fastify, SQLite (node:sqlite built into Node 22)
 │   └── src/
 │       ├── discovery/     cycle, cleanup, scheduling, weeks and runs
-│       ├── integrations/  Last.fm, YouTube Music, Deezer, pickarr, Plex, Discord
+│       ├── integrations/  Last.fm, YouTube Music, iTunes, pickarr, Plex, Discord
 │       ├── profiles/  settings/  stats/  health/  auth/
 │       └── db/            connection and migrations
 ├── web/        Vue 3 + Vite + vue-router
@@ -320,7 +320,7 @@ docker build -t discoverr .
 
 - **Recommendations:** they are only as good as your Last.fm history. A few weeks of scrobbling are needed.
 - **YouTube Music links:** search goes through an unofficial library (`ytmusic-api`). A track that can't be found is simply skipped.
-- **Deezer previews:** they come from Deezer's public API. If unavailable, the track has no preview, but everything else works.
+- **Previews:** 30 s previews come from the iTunes Search API (about 20 calls per minute, so selection takes a few minutes; paused for an hour if Apple refuses). Covers come from YouTube Music. A track without a preview is still proposed. Deezer is not used: its CDN can block a home IP entirely.
 - **pickarr:** a dedicated instance is required until pickarr can write to a per-link subfolder.
 - **One discoverr instance at a time:** state lives in a local SQLite database.
 
@@ -331,6 +331,6 @@ docker build -t discoverr .
 discoverr is licensed under the [GNU GPL v3](LICENSE).
 
 - [pickarr](https://gitlab.com/dhmetha/pickarr) by dhmetha: downloading, tagging and importing into Plex.
-- [Last.fm API](https://www.last.fm/api), [Deezer API](https://developers.deezer.com/api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (GPL-3.0 license).
+- [Last.fm API](https://www.last.fm/api), [iTunes Search API](https://performance-partners.apple.com/search-api), [ytmusic-api](https://github.com/zS1L3NT/ts-npm-ytmusic-api) (GPL-3.0 license).
 
 discoverr only finds tracks and hands them to pickarr: it is up to you to make sure what you download complies with the law in your country.

@@ -11,8 +11,8 @@ import { RunsRepository } from "./discovery/runs.repository";
 import { SchedulerService } from "./discovery/scheduler.service";
 import { WeeksRepository } from "./discovery/weeks.repository";
 import { HealthService } from "./health/health.service";
-import { DeezerService } from "./integrations/deezer.service";
 import { DiscordService } from "./integrations/discord.service";
+import { ItunesService } from "./integrations/itunes.service";
 import { LastfmService } from "./integrations/lastfm.service";
 import { PickarrService } from "./integrations/pickarr.service";
 import { PlexService } from "./integrations/plex.service";
@@ -34,7 +34,7 @@ import { StatsService } from "./stats/stats.service";
     { provide: APP_GUARD, useClass: AuthGuard },
     LastfmService,
     YtmusicService,
-    DeezerService,
+    ItunesService,
     PickarrService,
     PlexService,
     DiscordService,

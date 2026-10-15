@@ -31,7 +31,7 @@ const badge = computed(() => {
       :style="track.coverUrl ? { backgroundImage: `url(${track.coverUrl})` } : undefined"
       :disabled="!track.previewUrl"
       :aria-label="playing ? 'Pause' : `Écouter un extrait de ${track.title}`"
-      :title="track.previewUrl ? 'Extrait de 30 s (Deezer)' : 'Pas d\'extrait disponible'"
+      :title="track.previewUrl ? 'Extrait de 30 s (iTunes)' : 'Pas d\'extrait disponible'"
       @click="track.previewUrl && toggle(track.previewUrl)"
     >
       <span class="play">{{ playing ? "❚❚" : track.previewUrl ? "▶" : "♪" }}</span>

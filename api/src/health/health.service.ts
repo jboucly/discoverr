@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import type { Check } from "../contracts";
 import { discoveryDir, env, musicDir, sharedPickarrLibrary, toPlexPath } from "../env";
+import { ItunesService } from "../integrations/itunes.service";
 import { LastfmService } from "../integrations/lastfm.service";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService } from "../integrations/plex.service";
@@ -18,6 +19,7 @@ export class HealthService {
     private readonly pickarr: PickarrService,
     private readonly lastfm: LastfmService,
     private readonly profiles: ProfilesService,
+    private readonly itunes: ItunesService,
   ) {}
 
   private async check(name: string, fn: () => Promise<string>): Promise<Check> {
@@ -58,6 +60,10 @@ export class HealthService {
             }),
           ]
         : []),
+      this.check("Extraits (iTunes)", async () => {
+        await this.itunes.check();
+        return "joignable (facultatif : sans extrait, un titre reste proposé)";
+      }),
       this.check("Espace disque", async () => {
         const s = await fs.statfs(env.paths.musicRoot);
         const free = s.bavail * s.bsize;

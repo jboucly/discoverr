@@ -5,7 +5,7 @@ import { sleep } from "../common/text";
 import { discoveryDir, env, musicDir, sharedPickarrLibrary, toPlexPath } from "../env";
 import { PickarrService } from "../integrations/pickarr.service";
 import { PlexService, type PlexTrack } from "../integrations/plex.service";
-import type { Profile } from "../profiles/profiles.service";
+import { ProfilesService, type Profile } from "../profiles/profiles.service";
 import { SettingsService } from "../settings/settings.service";
 import { WeeksRepository, type Track, type Week } from "./weeks.repository";
 
@@ -37,6 +37,7 @@ export class CleanupService {
     private readonly plex: PlexService,
     private readonly pickarr: PickarrService,
     private readonly settings: SettingsService,
+    private readonly profiles: ProfilesService,
   ) {}
 
   private async assertInDiscovery(file: string) {
@@ -125,7 +126,12 @@ export class CleanupService {
     const result: CleanupResult = { liked: [], deleted: [], pending: [], warnings: [] };
     const token = profile.plexToken ?? undefined;
     await this.plex.identity(); // Plex injoignable : erreur avant de toucher au moindre fichier.
-    const inOtherPlaylists = keepIfInOtherPlaylist ? await this.plex.tracksInOtherPlaylists(profile.playlistTitle, token) : new Set<string>();
+    // Les playlists des autres profils sur le même compte Plex ne comptent pas : ce sont des découvertes, pas un choix.
+    const discoverrPlaylists = this.profiles
+      .list()
+      .filter((p) => (p.plexToken ?? "") === (profile.plexToken ?? ""))
+      .map((p) => p.playlistTitle);
+    const inOtherPlaylists = keepIfInOtherPlaylist ? await this.plex.tracksInOtherPlaylists(discoverrPlaylists, token) : new Set<string>();
 
     for (const track of this.weeks.tracks(week.id).filter((t) => t.status === "imported" || t.status === "pending")) {
       try {

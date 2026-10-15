@@ -133,10 +133,11 @@ export class PlexService {
     return (await this.request<Container<Playlist>>("/playlists?playlistType=audio", token)).MediaContainer.Metadata ?? [];
   }
 
-  async tracksInOtherPlaylists(exceptTitle: string, token = env.plex.token): Promise<Set<string>> {
+  /** Titres des playlists manuelles du compte, sauf `exceptTitles` (les playlists de discoverr). */
+  async tracksInOtherPlaylists(exceptTitles: string[], token = env.plex.token): Promise<Set<string>> {
     const keys = new Set<string>();
     for (const playlist of await this.audioPlaylists(token)) {
-      if (playlist.title === exceptTitle || playlist.smart === true || playlist.smart === 1) continue;
+      if (exceptTitles.includes(playlist.title) || playlist.smart === true || playlist.smart === 1) continue;
       const items = (await this.request<Container<PlexTrack>>(`/playlists/${playlist.ratingKey}/items`, token)).MediaContainer.Metadata ?? [];
       items.forEach((i) => keys.add(i.ratingKey));
     }

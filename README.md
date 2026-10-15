@@ -291,14 +291,14 @@ discoverr/
 ```
 
 ```bash
-# API (port 3000)
 pnpm install
-cd api
-cp ../.env.example .env   # then export the variables, with DATA_DIR and MUSIC_ROOT as local paths
-pnpm build && pnpm start
+cp api/.env.example api/.env   # then fill it in, with DATA_DIR and MUSIC_ROOT as local paths
 
-# Front (port 5175, /api proxied to localhost:3000)
-cd web && pnpm dev
+# API (port 3000) and front (port 5175, /api proxied to the API), with hot reload
+pnpm dev
+
+# API alone, without watching
+cd api && pnpm build && pnpm start
 
 # Checks
 pnpm typecheck && pnpm test

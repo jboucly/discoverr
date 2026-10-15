@@ -11,8 +11,8 @@ pnpm install                             # whole workspace (pnpm 10, version pin
 pnpm typecheck                           # api (src + test) and web
 pnpm test                                # integration tests (node:test, fake Plex/pickarr over HTTP)
 pnpm build                               # both packages
-cd api && pnpm build && pnpm start       # run the API (needs the env vars from api/.env.example)
-cd web && pnpm dev                       # Vite dev server on :5175, proxies /api to localhost:3000
+pnpm dev                                 # API (:3000, tsc --watch + node --watch, reads api/.env) and Vite (:5175, proxies /api)
+cd api && pnpm build && pnpm start       # run the API once, without watching
 docker build -t discoverr .              # full image (front + API)
 ```
 

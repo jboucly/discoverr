@@ -11,9 +11,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/main.js",
-    "dev": "tsc -p tsconfig.build.json --watch",
+    "build:watch": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
-    "test": "rm -rf dist-test && tsc -p tsconfig.test.json && node --test --disable-warning=ExperimentalWarning \"dist-test/test/**/*.spec.js\""
+    "test": "rm -rf dist-test && tsc -p tsconfig.test.json && node --test --disable-warning=ExperimentalWarning \"dist-test/test/**/*.spec.js\"",
+    "dev": "tsc -p tsconfig.build.json && (tsc -p tsconfig.build.json --watch --preserveWatchOutput & node --watch --env-file-if-exists=.env --disable-warning=ExperimentalWarning dist/main.js)"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",

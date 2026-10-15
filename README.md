@@ -35,8 +35,8 @@ Every week, discoverr picks tracks you have never listened to based on your **La
 
 ```
           Last.fm                 YouTube Music + iTunes            pickarr-discovery              Plex
-   (your scrobbles, similar ──►  (track link, 30 s         ──►   (Soulseek, else YouTube,   ──►  "Discoveries"
-    tracks and artists)           cover art, preview)              Deezer tags, filing)            playlist
+   (your scrobbles, similar ──►  (track link, cover,       ──►   (Soulseek, else YouTube,   ──►  "Discoveries"
+    tracks and artists)           30 s preview)                    Deezer tags, filing)            playlist
 ```
 
 Every week (Monday 3 AM by default), for each active profile:

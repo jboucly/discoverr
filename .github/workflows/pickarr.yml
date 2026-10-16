@@ -1,7 +1,9 @@
 name: pickarr image
 
-# Builds the pickarr image (https://gitlab.com/dhmetha/pickarr) and publishes it privately to
+# Builds the pickarr image (https://gitlab.com/dhmetha/pickarr) and publishes it to
 # ghcr.io/<owner>/pickarr. Manual trigger only: Actions → pickarr image → Run workflow.
+# The package inherits this repository's visibility (public) on first push: set it to private
+# once in the package settings; later pushes keep that visibility.
 on:
   workflow_dispatch:
     inputs:

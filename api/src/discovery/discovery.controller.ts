@@ -8,7 +8,7 @@ import { RunsRepository } from "./runs.repository";
 import { SchedulerService } from "./scheduler.service";
 import { WeeksRepository, type Track } from "./weeks.repository";
 
-/** Ce que le navigateur voit d'un titre (sans chemin de fichier). */
+/** What the browser sees of a track (no file path). */
 const trackDto = ({ file, ...t }: Track, liveRating?: number | null): TrackDto => ({
   ...t,
   hasFile: !!file,
@@ -54,7 +54,7 @@ export class DiscoveryController {
     return { started: true };
   }
 
-  /** Semaines d'un profil ; pour les semaines en cours, la note ❤️ est lue en direct dans Plex. */
+  /** A profile's weeks; for the current weeks, the ❤️ rating is read live from Plex. */
   @Get("profiles/:id/weeks")
   async list(@Param("id", ParseIntPipe) id: number, @Query("limit") limit?: string): Promise<WeekDto[]> {
     const profile = this.profiles.get(id);
@@ -98,7 +98,7 @@ export class DiscoveryController {
     this.discovery.discardReview(id);
   }
 
-  /** Garder un titre (sans ❤️), ou l'écarter / le reprendre pendant la validation. */
+  /** Keep a track (without ❤️), or reject / restore it during review. */
   @Patch("tracks/:id")
   updateTrack(@Param("id", ParseIntPipe) id: number, @Body() body: { keep?: unknown; rejected?: unknown }) {
     const track = this.weeks.track(id);

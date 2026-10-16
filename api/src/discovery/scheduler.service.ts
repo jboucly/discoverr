@@ -5,7 +5,7 @@ import { ProfilesService } from "../profiles/profiles.service";
 import { SettingsService } from "../settings/settings.service";
 import { DiscoveryService } from "./discovery.service";
 
-/** Lancement hebdomadaire (réglable dans l'interface, sans redémarrage) et validation d'office des sélections. */
+/** Weekly run (configurable in the UI, no restart needed) and auto-approval of selections. */
 @Injectable()
 export class SchedulerService implements OnApplicationBootstrap, OnModuleDestroy {
   private readonly logger = new Logger(SchedulerService.name);

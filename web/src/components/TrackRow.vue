@@ -9,7 +9,7 @@ const props = defineProps<{ track: Track; live?: boolean }>();
 
 const playing = computed(() => player.playing && player.url === props.track.previewUrl);
 
-/** Pendant la semaine en cours : ❤️ lu dans Plex, « Gardé » forcé, sinon supprimé au prochain ménage. */
+/** During the current week: ❤️ read from Plex, "Gardé" forced, otherwise deleted by the next cleanup. */
 const badge = computed(() => {
   const t = props.track;
   const liked = t.rating !== null && t.rating >= (store.status?.likedMinRating ?? 10);

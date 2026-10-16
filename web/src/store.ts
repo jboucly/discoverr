@@ -11,7 +11,7 @@ function readStoredProfile(): number | null {
   }
 }
 
-/** État partagé : profils, profil choisi (mémorisé dans le navigateur) et statut en direct. */
+/** Shared state: profiles, selected profile (remembered in the browser) and live status. */
 export const store = reactive({
   profiles: [] as Profile[],
   profileId: readStoredProfile(),
@@ -26,7 +26,7 @@ export function selectProfile(id: number) {
   try {
     localStorage.setItem(PROFILE_KEY, String(id));
   } catch {
-    /* navigation privée : le choix n'est simplement pas mémorisé */
+    /* private browsing: the choice is simply not remembered */
   }
 }
 
@@ -48,7 +48,7 @@ export function toast(message: string, error = false) {
   toastTimer = setTimeout(() => (store.toast = null), error ? 6000 : 3000);
 }
 
-/** Exécute une action et affiche l'erreur éventuelle plutôt que de la perdre. */
+/** Runs an action and shows its error, if any, instead of losing it. */
 export async function attempt<T>(fn: () => Promise<T>, success?: string): Promise<T | undefined> {
   try {
     const result = await fn();

@@ -14,7 +14,7 @@ export class MiscController {
     private readonly profiles: ProfilesService,
   ) {}
 
-  /** Sonde de vie pour Docker : publique, ne révèle rien. */
+  /** Liveness probe for Docker: public, reveals nothing. */
   @Public()
   @Get("health")
   live() {

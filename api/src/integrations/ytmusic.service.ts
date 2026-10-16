@@ -19,8 +19,8 @@ export class YtmusicService {
   }
 
   /**
-   * Lien YouTube Music du titre, que pickarr sait lire (il retrouve ensuite les tags et cherche d'abord sur Soulseek :
-   * ce lien sert surtout à identifier le morceau), et sa pochette. null si rien ne correspond vraiment.
+   * The track's YouTube Music link, which pickarr can read (it then finds the tags and tries Soulseek first:
+   * the link mostly identifies the song), and its cover. null if nothing really matches.
    */
   async findSong(artist: string, title: string): Promise<{ link: string; coverUrl: string | null } | null> {
     const songs = await (await this.ytmusic()).searchSongs(`${artist} ${title}`);
@@ -37,7 +37,7 @@ export class YtmusicService {
       );
     });
     if (!match) return null;
-    // Vignettes de 60 et 120 px : la taille est dans l'URL (…=w120-h120-l90-rj), on en demande une plus grande.
+    // 60 and 120 px thumbnails: the size is in the URL (…=w120-h120-l90-rj), so ask for a bigger one.
     const thumbnail = [...match.thumbnails].sort((a, b) => b.width - a.width)[0]?.url;
     return {
       link: `https://music.youtube.com/watch?v=${match.videoId}`,

@@ -3,7 +3,7 @@ import type { ProfileDto } from "../contracts";
 import { LastfmService } from "../integrations/lastfm.service";
 import { ProfilesService, type Profile, type ProfileInput } from "./profiles.service";
 
-/** Le jeton Plex n'est jamais renvoyé au navigateur. */
+/** The Plex token is never sent back to the browser. */
 const toDto = ({ plexToken, ...rest }: Profile): ProfileDto => ({ ...rest, hasPlexToken: !!plexToken });
 
 function parseInput(body: Record<string, unknown>, partial: boolean): Partial<ProfileInput> {

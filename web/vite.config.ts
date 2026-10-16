@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 5175,
-    // En dev, l'API Nest tourne à côté (npm run start dans api/).
+    // In dev, the Nest API runs alongside (npm run start in api/).
     proxy: { "/api": "http://localhost:3000" },
   },
 });

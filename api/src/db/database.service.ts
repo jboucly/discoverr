@@ -7,10 +7,10 @@ import { MIGRATIONS } from "./migrations";
 
 type Params = Record<string, SQLInputValue> | SQLInputValue[];
 
-/** Nombre de sauvegardes gardées dans DATA_DIR/backups. */
+/** Number of backups kept in DATA_DIR/backups. */
 const BACKUPS_KEPT = 10;
 
-/** SQLite intégré à Node (node:sqlite) : pas de dépendance native à compiler dans l'image. */
+/** SQLite built into Node (node:sqlite): no native dependency to compile in the image. */
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   private readonly logger = new Logger(DatabaseService.name);
@@ -38,8 +38,8 @@ export class DatabaseService implements OnModuleDestroy {
   }
 
   /**
-   * Copie cohérente de la base (VACUUM INTO, sûr pendant que la base est ouverte) dans DATA_DIR/backups,
-   * en ne gardant que les BACKUPS_KEPT plus récentes. Renvoie le chemin du fichier créé.
+   * Consistent copy of the database (VACUUM INTO, safe while the database is open) into DATA_DIR/backups,
+   * keeping only the BACKUPS_KEPT most recent ones. Returns the path of the created file.
    */
   backup(): string {
     const dir = path.join(env.dataDir, "backups");

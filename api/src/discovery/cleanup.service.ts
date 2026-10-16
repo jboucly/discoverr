@@ -25,8 +25,8 @@ const exists = (p: string) =>
   );
 
 /**
- * Ménage d'une semaine : les titres aimés (❤️, « Garder », autre playlist) sont déplacés vers le dossier du profil,
- * les autres supprimés. Règle d'or : on ne supprime jamais hors du dossier des découvertes, et au moindre doute on garde.
+ * Cleanup of a week: liked tracks (❤️, "Garder", another playlist) are moved to the profile's folder,
+ * the others deleted. Golden rule: never delete outside the discoveries folder, and keep the file on any doubt.
  */
 @Injectable()
 export class CleanupService {
@@ -46,7 +46,7 @@ export class CleanupService {
     if (!real.startsWith(root + path.sep)) throw new Error(`Refusé : ${real} n'est pas dans ${root}`);
   }
 
-  /** Supprime les dossiers vidés (ou qui n'ont plus que cover.jpg), sans remonter au-dessus des découvertes. */
+  /** Removes emptied folders (or ones left with only cover.jpg), never going above the discoveries folder. */
   private async pruneDirs(startDir: string, dryRun: boolean) {
     const root = path.resolve(discoveryDir());
     let dir = path.resolve(startDir);
@@ -88,7 +88,7 @@ export class CleanupService {
     this.weeks.moveFileReferences(file, dest);
     this.weeks.updateTrack(track.id, { status: "liked", rating: plexTrack.userRating ?? null });
 
-    // Plex peut voir le fichier déplacé comme un nouvel élément : on remet la note pour qu'il reste dans ❤️ Tracks.
+    // Plex may see the moved file as a new item: set the rating again so it stays in ❤️ Tracks.
     const token = profile.plexToken ?? undefined;
     await this.plex.scanFolder(toPlexPath(path.dirname(file))).catch(() => undefined);
     await this.plex.scanFolder(toPlexPath(path.dirname(dest)));
@@ -105,7 +105,7 @@ export class CleanupService {
     if (sharedPickarrLibrary() && !env.pickarr.allowDeleteInLibrary) {
       throw new Error(`Suppression refusée : ${discoveryDir()} est dans la bibliothèque de pickarr, il faut ALLOW_DELETE_IN_PICKARR_LIBRARY=true`);
     }
-    // Le même fichier est encore proposé ailleurs (autre profil, autre semaine) : on le laisse à cette autre semaine.
+    // The same file is still suggested elsewhere (another profile, another week): leave it to that other week.
     const shared = this.weeks.othersUsingFile(file, track.id).length > 0;
     if (!shared) await this.assertInDiscovery(file);
     if (dryRun) {
@@ -125,8 +125,8 @@ export class CleanupService {
     const { dryRun, likedMinRating, keepIfInOtherPlaylist } = this.settings.get();
     const result: CleanupResult = { liked: [], deleted: [], pending: [], warnings: [] };
     const token = profile.plexToken ?? undefined;
-    await this.plex.identity(); // Plex injoignable : erreur avant de toucher au moindre fichier.
-    // Les playlists des autres profils sur le même compte Plex ne comptent pas : ce sont des découvertes, pas un choix.
+    await this.plex.identity(); // Plex unreachable: fail before touching any file.
+    // Other profiles' playlists on the same Plex account do not count: they are discoveries, not a choice.
     const discoverrPlaylists = this.profiles
       .list()
       .filter((p) => (p.plexToken ?? "") === (profile.plexToken ?? ""))
@@ -157,14 +157,14 @@ export class CleanupService {
       }
     }
 
-    // Titres jamais importés : leur pick n'a plus d'utilité dans pickarr.
+    // Tracks never imported: their pick is no longer useful in pickarr.
     if (!dryRun) {
       for (const track of this.weeks.tracks(week.id).filter((t) => t.status === "failed")) await this.releasePick(track);
     }
 
     if (!dryRun && result.deleted.length > 0) {
       await this.plex.scanFolder(toPlexPath(discoveryDir()));
-      await sleep(60_000); // laisse au scan le temps de marquer les fichiers disparus
+      await sleep(60_000); // give the scan time to mark the missing files
       await this.plex.emptyTrash(toPlexPath(discoveryDir()));
     }
     if (!dryRun && result.pending.length === 0) this.weeks.setWeekStatus(week.id, "cleaned");
@@ -174,7 +174,7 @@ export class CleanupService {
     return result;
   }
 
-  /** Utilisé par la page État. */
+  /** Used by the "État" page. */
   static libraryPaths(profile: Profile) {
     return { discovery: toPlexPath(discoveryDir()), liked: toPlexPath(musicDir(profile.likedSubdir)), musicRoot: env.paths.musicRoot };
   }

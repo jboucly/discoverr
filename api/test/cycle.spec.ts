@@ -12,7 +12,7 @@ describe("cycle", () => {
   afterEach(() => w.close());
 
   test("sélection, téléchargement et playlist, sans reproposer ce qui est déjà dans Plex", async () => {
-    // Déjà dans la bibliothèque, dans une autre version : ne doit pas être proposé.
+    // Already in the library, in another version: must not be suggested.
     writeAudio(w.local("Lossless", "Known", "Hit.m4a"), "Known", "Hit (Original Mix)");
     w.plex.scan(PLEX_ROOT);
     const profile = w.addProfile({ tracks: 3 });
@@ -91,7 +91,7 @@ describe("cycle", () => {
         position,
       })),
     );
-    // Envoyé à pickarr juste avant l'arrêt.
+    // Sent to pickarr just before the shutdown.
     const [sent] = w.weeks.tracks(week.id);
     const pick = await w.pickarrService.addPick(sent!.link!);
     w.weeks.updateTrack(sent!.id, { pickId: pick.id });

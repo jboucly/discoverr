@@ -10,7 +10,7 @@ import { AppModule } from "./app.module";
 import { BufferedLogger } from "./common/log-buffer.logger";
 import { env } from "./env";
 
-/** Application Vue (routage côté navigateur) : toute page inconnue hors /api renvoie index.html. */
+/** Vue app (client-side routing): any unknown page outside /api returns index.html. */
 @Catch(NotFoundException)
 class SpaFallbackFilter extends BaseExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {

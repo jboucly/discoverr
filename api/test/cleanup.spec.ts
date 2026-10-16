@@ -38,7 +38,7 @@ describe("ménage", () => {
       assert.ok(existsSync(t.file!), `${title} non déplacé`);
       assert.ok(existsSync(w.local("pickarr", title, `${title} - Singles`, "cover.jpg")), `${title} : pochette non copiée`);
     }
-    // Le fichier déplacé est un nouvel élément Plex : la note doit avoir été remise dessus.
+    // The moved file is a new Plex item: the rating must have been set on it again.
     const moved = w.plex.itemByLocalFile(byTitle(w, week1!.id, "Hearted").file!)!;
     assert.notEqual(moved.ratingKey, hearted.ratingKey);
     assert.equal(moved.userRating, 10);
@@ -51,7 +51,7 @@ describe("ménage", () => {
     assert.ok(w.pickarr.deleted.includes(unloved.pickId!), "pick non retiré de pickarr");
     assert.ok(w.plex.calls.includes("PUT /library/sections/1/emptyTrash"));
 
-    // La playlist ne contient plus que la nouvelle semaine.
+    // The playlist only contains the new week.
     const [week2] = w.weeks.weeks(profile.id);
     assert.deepEqual(
       w.plex.playlistKeys("Découvertes de la semaine"),
@@ -64,7 +64,7 @@ describe("ménage", () => {
     const p1 = w.addProfile({ name: "Un", tracks: 1, reviewMode: true, playlistTitle: "Un" });
     const p2 = w.addProfile({ name: "Deux", tracks: 1, reviewMode: true, playlistTitle: "Deux" });
     const shared = [candidate("Shared", "Song"), candidate("Shared", "Other")];
-    // Les deux sélections sont faites avant tout téléchargement : le même titre est proposé aux deux profils.
+    // Both selections are made before any download: the same track is suggested to both profiles.
     await w.run(p1.id, shared);
     await w.run(p2.id, shared);
     const [w1] = w.weeks.weeks(p1.id);

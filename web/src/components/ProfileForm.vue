@@ -15,7 +15,7 @@ const form = reactive<ProfileInput>({
   reviewMode: props.profile?.reviewMode ?? false,
   enabled: props.profile?.enabled ?? true,
 });
-/** Jeton : vide = inchangé (en modification) ; « useAdmin » efface le jeton du profil. */
+/** Token: empty = unchanged (when editing); "useAdmin" clears the profile's token. */
 const plexToken = ref("");
 const useAdmin = ref(!props.profile?.hasPlexToken);
 const lastfmCheck = ref<string | null>(null);

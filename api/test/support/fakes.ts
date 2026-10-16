@@ -19,7 +19,7 @@ type Handler = (
   body: string,
 ) => { status?: number; json?: unknown } | undefined;
 
-/** Petit serveur HTTP local ; renvoie son URL et de quoi l'arrêter. */
+/** Small local HTTP server; returns its URL and a way to stop it. */
 export async function serve(
   handler: Handler,
 ): Promise<{ url: string; close: () => Promise<void> }> {
@@ -53,7 +53,7 @@ export async function serve(
   };
 }
 
-/** Les faux fichiers audio contiennent leurs tags en JSON : le faux Plex les lit au scan, même après un déplacement. */
+/** The fake audio files hold their tags as JSON: the fake Plex reads them on scan, even after a move. */
 export function writeAudio(file: string, artist: string, title: string) {
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, JSON.stringify({ artist, title }));
@@ -71,14 +71,14 @@ export interface PlexItem {
   ratingKey: string;
   title: string;
   artist: string;
-  /** Chemin vu par Plex. */
+  /** Path as Plex sees it. */
   file: string;
   userRating?: number;
 }
 
 /**
- * Faux Plex : une bibliothèque musicale sur `plexRoot`, indexée en scannant le vrai dossier `musicRoot`.
- * Comme le vrai, un fichier déplacé devient un nouvel élément (sans note) au scan de son nouveau dossier.
+ * Fake Plex: a music library on `plexRoot`, indexed by scanning the real `musicRoot` folder.
+ * Like the real one, a moved file becomes a new item (unrated) when its new folder is scanned.
  */
 export class FakePlex {
   readonly items = new Map<string, PlexItem>();
@@ -253,19 +253,19 @@ export class FakePlex {
   };
 }
 
-/** Lien YouTube Music factice qui porte le titre, pour que le faux pickarr sache quoi « télécharger ». */
+/** Fake YouTube Music link carrying the title, so the fake pickarr knows what to "download". */
 export const ytLink = (artist: string, title: string) =>
   `https://music.youtube.com/watch?v=${encodeURIComponent(JSON.stringify({ artist, title }))}`;
 
 /**
- * Faux pickarr : chaque lien est importé tout de suite dans `libraryRoot` (sous `subfolder` s'il est donné),
- * au même chemin pour un même titre, comme le vrai. Un titre contenant « FAIL » échoue.
+ * Fake pickarr: each link is imported right away into `libraryRoot` (under `subfolder` if given),
+ * at the same path for the same track, like the real one. A title containing "FAIL" fails.
  */
 export class FakePickarr {
   readonly picks = new Map<number, object>();
   readonly posts: { url: string; subfolder?: string }[] = [];
   readonly deleted: number[] = [];
-  /** Titre écrit dans les tags quand pickarr ne garde pas celui du lien (« A - B Remix » -> « A (B Remix) »). */
+  /** Title written in the tags when pickarr does not keep the link's one ("A - B Remix" -> "A (B Remix)"). */
   readonly taggedTitles = new Map<string, string>();
   private nextId = 1;
 

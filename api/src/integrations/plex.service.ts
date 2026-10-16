@@ -30,8 +30,8 @@ interface Playlist {
 }
 
 /**
- * Les notes (❤️) et les playlists sont propres à chaque compte Plex : ces appels prennent le jeton du profil.
- * Les opérations sur la bibliothèque (scan, corbeille) utilisent le jeton administrateur.
+ * Ratings (❤️) and playlists belong to each Plex account: these calls take the profile's token.
+ * Library operations (scan, trash) use the admin token.
  */
 @Injectable()
 export class PlexService {
@@ -68,7 +68,7 @@ export class PlexService {
     return section;
   }
 
-  /** Le dossier est-il couvert par une bibliothèque musicale ? (page État) */
+  /** Is the folder covered by a music library? ("État" page) */
   async folderInLibrary(plexPath: string): Promise<boolean> {
     return this.sectionFor(plexPath).then(
       () => true,
@@ -87,7 +87,7 @@ export class PlexService {
 
   async isInLibrary(artist: string, title: string): Promise<boolean> {
     const wantedArtist = normalize(mainArtist(artist));
-    // Toutes versions confondues : si tu as l'original, le remix n'est pas proposé (et inversement).
+    // Across all versions: if the user has the original, the remix is not suggested (and vice versa).
     const wantedTitle = normalize(stripVersion(title));
     for (const section of await this.musicSections()) {
       for (const track of await this.searchTracks(section, stripVersion(title))) {
@@ -99,9 +99,9 @@ export class PlexService {
   }
 
   /**
-   * Trouve l'élément d'un fichier, en laissant au scan le temps de l'ajouter (jusqu'à `waitMs`).
-   * La recherche se fait sur le titre sans version : Last.fm écrit « Machete - A.M.C Remix », les tags de pickarr
-   * « Machete (A.M.C Remix) », et Plex ne cherche que par sous-chaîne. Le chemin du fichier départage ensuite.
+   * Finds a file's item, giving the scan time to add it (up to `waitMs`).
+   * The search uses the title without its version: Last.fm writes "Machete - A.M.C Remix", pickarr's tags
+   * "Machete (A.M.C Remix)", and Plex only searches by substring. The file path then settles it.
    */
   async findByFile(plexPath: string, title: string, token = env.plex.token, waitMs = 5 * 60_000): Promise<PlexTrack | null> {
     const section = await this.sectionFor(plexPath);
@@ -137,7 +137,7 @@ export class PlexService {
     return (await this.request<Container<Playlist>>("/playlists?playlistType=audio", token)).MediaContainer.Metadata ?? [];
   }
 
-  /** Titres des playlists manuelles du compte, sauf `exceptTitles` (les playlists de discoverr). */
+  /** Titles of the account's manual playlists, except `exceptTitles` (discoverr's playlists). */
   async tracksInOtherPlaylists(exceptTitles: string[], token = env.plex.token): Promise<Set<string>> {
     const keys = new Set<string>();
     for (const playlist of await this.audioPlaylists(token)) {
@@ -148,7 +148,7 @@ export class PlexService {
     return keys;
   }
 
-  /** Remplace le contenu de la playlist (créée si besoin), en gardant la même playlist pour Plexamp. */
+  /** Replaces the playlist's content (created if needed), keeping the same playlist for Plexamp. */
   async replacePlaylist(title: string, ratingKeys: string[], token = env.plex.token): Promise<void> {
     const uri = `server://${await this.machineIdentifier()}/com.plexapp.plugins.library/library/metadata/${ratingKeys.join(",")}`;
     const existing = (await this.audioPlaylists(token)).find((p) => p.title === title);

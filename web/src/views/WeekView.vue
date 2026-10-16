@@ -13,7 +13,7 @@ const profile = currentProfile;
 const activity = computed(() => activityFor(profile.value?.id));
 const lastRun = computed(() => store.status?.lastRuns.find((r) => r.profileId === profile.value?.id)?.run ?? null);
 
-/** La semaine à montrer en premier : sélection à valider ou téléchargement en cours, sinon la playlist en place. */
+/** The week to show first: selection to review or download in progress, otherwise the current playlist. */
 const review = computed(() => weeks.value.find((w) => w.status === "review" || w.status === "dryrun") ?? null);
 const downloading = computed(() => weeks.value.find((w) => w.status === "downloading") ?? null);
 const active = computed(() => weeks.value.find((w) => w.status === "active") ?? null);
@@ -27,7 +27,7 @@ async function load() {
 watch(() => profile.value?.id, () => void attempt(load), { immediate: true });
 void api.settings().then((s) => (settings.value = s)).catch(() => {});
 
-// Rafraîchit la liste quand un lancement se termine, et régulièrement pendant qu'il tourne.
+// Refreshes the list when a run ends, and regularly while it runs.
 let wasRunning = false;
 watch(activity, (a) => {
   if (wasRunning && !a) void attempt(load);
@@ -148,7 +148,7 @@ const failed = (w: Week) => w.tracks.filter((t) => t.status === "failed").length
       <p v-if="lastRun?.ok === false" class="error-text small" style="margin-top: 12px">{{ lastRun.error }}</p>
     </section>
 
-    <!-- Sélection à valider (ou simulation) -->
+    <!-- Selection to review (or dry run) -->
     <section v-if="review" class="card">
       <div class="row spread">
         <div>

@@ -8,7 +8,7 @@ export interface ItunesSong {
   previewUrl?: string;
 }
 
-/** Le résultat qui est vraiment ce titre : bon artiste et même titre, toutes versions confondues. */
+/** The result that really is this track: right artist and same title, across all versions. */
 export function matchSong(results: ItunesSong[], artist: string, title: string): ItunesSong | null {
   const wantedArtist = normalize(mainArtist(artist));
   const wantedTitle = normalize(stripVersion(title));
@@ -19,14 +19,14 @@ export function matchSong(results: ItunesSong[], artist: string, title: string):
   );
 }
 
-/** Apple limite l'API de recherche à une vingtaine d'appels par minute. */
+/** Apple limits the search API to about twenty calls per minute. */
 const MIN_INTERVAL_MS = 3_000;
-/** Après un refus (403, 429), on laisse l'API tranquille : insister finit par faire bloquer l'IP. */
+/** After a refusal (403, 429), leave the API alone: insisting ends up getting the IP blocked. */
 const PAUSE_AFTER_REFUSAL_MS = 3_600_000;
 
 /**
- * Extraits de 30 s pour écouter les candidats dans l'interface, via l'API de recherche iTunes (sans clé).
- * Facultatif : sans extrait, le titre reste proposé avec son lien YouTube Music.
+ * 30 s previews to listen to candidates in the UI, through the iTunes search API (no key).
+ * Optional: without a preview, the track is still suggested with its YouTube Music link.
  */
 @Injectable()
 export class ItunesService {
@@ -57,7 +57,7 @@ export class ItunesService {
     }
   }
 
-  /** Page État : l'API répond-elle depuis ce serveur ? */
+  /** "État" page: does the API answer from this server? */
   async check(): Promise<void> {
     if (Date.now() < this.pausedUntil) throw new Error("en pause après un refus d'iTunes");
     await this.search("Daft Punk One More Time");

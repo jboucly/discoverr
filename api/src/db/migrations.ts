@@ -1,4 +1,4 @@
-/** Migrations appliquées dans l'ordre au démarrage. Ne jamais modifier une migration publiée : en ajouter une. */
+/** Migrations applied in order at startup. Never edit a released migration: add a new one. */
 export const MIGRATIONS: string[] = [
   `
   CREATE TABLE settings (

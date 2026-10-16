@@ -16,7 +16,7 @@ export interface PickOptions {
   count: number;
   newArtistRatio: number;
   maxPerArtist: number;
-  /** Filtre supplémentaire : déjà proposé, artiste bloqué, déjà dans Plex… */
+  /** Extra filter: already suggested, blocked artist, already in Plex… */
   exclude: (c: Candidate) => Promise<boolean>;
 }
 
@@ -40,7 +40,7 @@ export class LastfmService {
   private readonly logger = new Logger(LastfmService.name);
   private queue: Promise<unknown> = Promise.resolve();
 
-  /** Appels en file, ~4 requêtes/s (Last.fm tolère 5/s). */
+  /** Queued calls, ~4 requests/s (Last.fm allows 5/s). */
   private call<T>(method: string, params: Record<string, string | number>): Promise<T> {
     const task = this.queue.then(async () => {
       await sleep(250);
@@ -59,7 +59,7 @@ export class LastfmService {
     return task;
   }
 
-  /** Vérifie que le compte existe et a des écoutes. */
+  /** Checks that the account exists and has scrobbles. */
   async checkUser(user: string): Promise<{ playcount: number; registered: string | null }> {
     const data = await this.call<{ user: { playcount: string; registered?: { "#text"?: number } } }>("user.getinfo", { user });
     const ts = data.user.registered?.["#text"];
@@ -168,7 +168,7 @@ export class LastfmService {
     }
   }
 
-  /** Titres jamais écoutés : une part de nouveaux artistes, le reste proche de tes titres, avec un plafond par artiste. */
+  /** Never-played tracks: a share from new artists, the rest close to the user's tracks, with a cap per artist. */
   async pickCandidates(options: PickOptions): Promise<Candidate[]> {
     const { user, count } = options;
     const seedMap = await this.seeds(user);

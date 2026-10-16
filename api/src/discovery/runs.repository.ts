@@ -38,7 +38,7 @@ export class RunsRepository {
     ).map(toRun);
   }
 
-  /** Lancements restés ouverts (container arrêté en plein travail) : marqués en échec au démarrage. */
+  /** Runs left open (container stopped mid-work): marked as failed at startup. */
   closeInterrupted() {
     this.db.run("UPDATE runs SET finished_at = ?, ok = 0, error = 'Interrompu (redémarrage)' WHERE finished_at IS NULL", [now()]);
   }

@@ -6,7 +6,7 @@ import { AuthService, SESSION_COOKIE } from "./auth.service";
 export const IS_PUBLIC = "isPublic";
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 
-/** En-tête envoyé par le front : une page d'un autre site ne peut pas le poser (protection CSRF en plus de SameSite). */
+/** Header sent by the front end: a page from another site cannot set it (CSRF protection on top of SameSite). */
 export const CSRF_HEADER = "x-requested-with";
 export const CSRF_VALUE = "discoverr";
 

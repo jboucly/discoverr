@@ -14,8 +14,8 @@ const safeEqual = (a: string, b: string) => {
 };
 
 /**
- * Un mot de passe (DISCOVERR_PASSWORD) ouvre une session signée ; les scripts envoient X-Api-Key.
- * La clé de signature dépend du mot de passe : le changer ferme toutes les sessions.
+ * A password (DISCOVERR_PASSWORD) opens a signed session; scripts send X-Api-Key.
+ * The signing key depends on the password: changing it closes every session.
  */
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -58,7 +58,7 @@ export class AuthService implements OnModuleInit {
     return !!env.apiKey && !!key && safeEqual(key, env.apiKey);
   }
 
-  /** Limite : 5 essais ratés par IP, puis 15 minutes d'attente. */
+  /** Limit: 5 failed attempts per IP, then a 15-minute wait. */
   checkPassword(password: string, ip: string): { ok: boolean; retryAfter?: number } {
     const entry = this.attempts.get(ip);
     if (entry && entry.count >= 5 && entry.until > Date.now()) return { ok: false, retryAfter: Math.ceil((entry.until - Date.now()) / 1000) };

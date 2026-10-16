@@ -1,11 +1,11 @@
 import type { Check, LogLine, ProfileDto, ProfileInput as ApiProfileInput, Run, Settings, Stats, Status, TrackDto, WeekDto } from "discoverr-api/contracts";
 
-// Types des réponses, définis par l'API (api/src/contracts.ts) : un changement côté API casse la vérification du front.
+// Response types, defined by the API (api/src/contracts.ts): a change on the API side breaks the front end's type check.
 export type { Activity, Check, LogLine, Run, Settings, Stats, Status, TrackStatus, WeekStatus } from "discoverr-api/contracts";
 export type Profile = ProfileDto;
 export type Track = TrackDto;
 export type Week = WeekDto;
-/** Le jeton Plex est facultatif à l'envoi : absent = inchangé. */
+/** The Plex token is optional when sending: missing = unchanged. */
 export type ProfileInput = Omit<ApiProfileInput, "plexToken"> & { plexToken?: string | null };
 
 export class ApiError extends Error {
@@ -17,7 +17,7 @@ export class ApiError extends Error {
   }
 }
 
-/** Appelé quand l'API répond 401 : l'app renvoie vers la page de connexion. */
+/** Called when the API answers 401: the app redirects to the login page. */
 let onUnauthorized = () => {};
 export const setUnauthorizedHandler = (fn: () => void) => (onUnauthorized = fn);
 

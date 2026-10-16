@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 
-/** Un seul extrait à la fois, partagé par toute l'app. */
+/** One preview at a time, shared by the whole app. */
 const audio = typeof Audio !== "undefined" ? new Audio() : null;
 export const player = reactive({ url: null as string | null, playing: false });
 

@@ -70,7 +70,7 @@ export class PickarrService {
     return pick.error !== null || (pick.expanded && pick.tracks.every((t) => FINAL.has(t.status)));
   }
 
-  /** Attend la fin de tous les picks (ou le délai) ; `onProgress` est appelé à chaque tour avec le dernier état. */
+  /** Waits for every pick to finish (or the timeout); `onProgress` is called on each poll with the latest state. */
   async waitForPicks(ids: number[], timeoutHours: number, onProgress?: (picks: Map<number, PickarrPick>) => void) {
     const deadline = Date.now() + timeoutHours * 3_600_000;
     const latest = new Map<number, PickarrPick>();
@@ -93,7 +93,7 @@ export class PickarrService {
     return latest;
   }
 
-  /** Fichier importé, vu par discoverr (LibraryFile est relatif au LibraryPath de l'instance pickarr). */
+  /** Imported file, as discoverr sees it (LibraryFile is relative to the pickarr instance's LibraryPath). */
   localFile(track: PickarrTrack): string | null {
     if (track.status !== "Imported" || !track.libraryFile) return null;
     return path.join(env.paths.musicRoot, env.pickarr.librarySubdir, track.libraryFile);

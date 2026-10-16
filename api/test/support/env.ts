@@ -1,4 +1,4 @@
-// Importé en premier par chaque test : env.ts lit l'environnement au chargement et exige ces variables.
+// Imported first by every test: env.ts reads the environment when loaded and requires these variables.
 import { Logger } from "@nestjs/common";
 
 process.env.LASTFM_API_KEY = "test";

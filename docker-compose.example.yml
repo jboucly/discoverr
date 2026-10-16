@@ -1,10 +1,10 @@
-# Exemple de déploiement : discoverr + une instance pickarr dédiée aux découvertes.
-# Prérequis : Plex (ici sur l'hôte, en network_mode host) et slskd si tu veux du FLAC via Soulseek.
-# Copie .env.example en .env, remplis-le, puis : docker compose -f docker-compose.example.yml up -d
+# Deployment example: discoverr + a pickarr instance dedicated to discoveries.
+# Requirements: Plex (here on the host, in network_mode host) and slskd if you want FLAC through Soulseek.
+# Copy .env.example to .env, fill it in, then: docker compose -f docker-compose.example.yml up -d
 
 services:
-  # pickarr n'écrit que dans un seul dossier : cette instance est réservée aux découvertes,
-  # pour que discoverr ne puisse jamais supprimer autre chose que ce qu'elle a téléchargé.
+  # pickarr writes to a single folder only: this instance is reserved for discoveries,
+  # so discoverr can never delete anything other than what it downloaded.
   pickarr-discovery:
     image: registry.gitlab.com/dhmetha/pickarr:unetha
     container_name: pickarr-discovery
@@ -15,13 +15,13 @@ services:
       - TZ=Europe/Paris
       - Pickarr__Password=${PICKARR_PASSWORD}
       - Pickarr__ApiKey=${DISCOVERY_PICKARR_API_KEY}
-      # Facultatif : Soulseek (FLAC). Sans slskd, pickarr se rabat sur YouTube / SoundCloud.
+      # Optional: Soulseek (FLAC). Without slskd, pickarr falls back to YouTube / SoundCloud.
       - Pickarr__Soulseek__Url=${SLSKD_URL:-}
       - Pickarr__Soulseek__ApiKey=${SLSKD_API_KEY:-}
       - Pickarr__Soulseek__DownloadsPath=/soulseek
       - Pickarr__Plex__Url=http://host.docker.internal:32400
       - Pickarr__Plex__Token=${PLEX_TOKEN}
-      # Le dossier des découvertes tel que Plex le voit
+      # The discoveries folder as Plex sees it
       - Pickarr__Plex__LibraryPathInPlex=${PLEX_MUSIC_ROOT:-/media/Musiques}/Decouvertes
       - Pickarr__LastFm__ApiKey=${LASTFM_API_KEY}
     volumes:
@@ -39,7 +39,7 @@ services:
       - host.docker.internal:host-gateway
     ports:
       - 8091:3000
-    # Secrets, URLs et chemins uniquement : le reste se règle dans l'interface.
+    # Secrets, URLs and paths only: everything else is set in the UI.
     environment:
       - TZ=Europe/Paris
       - DISCOVERR_PASSWORD=${DISCOVERR_PASSWORD}
@@ -53,7 +53,7 @@ services:
       - MUSIC_ROOT=/music
       - PLEX_MUSIC_ROOT=${PLEX_MUSIC_ROOT:-/media/Musiques}
       - DISCOVERY_SUBDIR=Decouvertes
-      # Premier démarrage seulement
+      # First boot only
       - LASTFM_USER=${LASTFM_USER}
       - DRY_RUN=${DISCOVERR_DRY_RUN:-true}
     volumes:

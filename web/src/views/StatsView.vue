@@ -14,7 +14,7 @@ watch(
   { immediate: true },
 );
 
-/** 12 dernières semaines décidées (ménage fait) : le taux de ❤️ n'a de sens qu'une fois le tri terminé. */
+/** Last 12 settled weeks (cleanup done): the ❤️ rate only makes sense once the sorting is over. */
 const weekly = computed(() => (stats.value?.weeks ?? []).filter((w) => w.likeRate !== null).slice(-12));
 const kindLabel: Record<string, string> = { similar: "Proches de tes écoutes", "new-artist": "Nouveaux artistes" };
 const maxSource = computed(() => Math.max(1, ...(stats.value?.sources.map((s) => s.count) ?? [])));

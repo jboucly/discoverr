@@ -9,7 +9,7 @@ export class HttpError extends Error {
   }
 }
 
-/** fetch + JSON, avec des essais sur les erreurs réseau, 5xx et 429. */
+/** fetch + JSON, with retries on network errors, 5xx and 429. */
 export async function fetchJson<T>(url: string, init: RequestInit = {}, attempts = 3): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -25,7 +25,7 @@ export async function fetchJson<T>(url: string, init: RequestInit = {}, attempts
       if (i < attempts - 1) await sleep(2_000 * (i + 1));
     }
   }
-  // « fetch failed » ne dit pas qui : on nomme l'hôte (jamais l'URL complète, qui peut porter un jeton).
+  // "fetch failed" does not say which service: name the host (never the full URL, which may carry a token).
   if (lastError instanceof TypeError) throw new Error(`${new URL(url).host} injoignable (${(lastError.cause as Error)?.message ?? lastError.message})`);
   throw lastError;
 }

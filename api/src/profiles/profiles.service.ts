@@ -38,7 +38,7 @@ export class ProfilesService implements OnModuleInit {
 
   constructor(private readonly db: DatabaseService) {}
 
-  /** Premier démarrage : un profil créé depuis LASTFM_USER, pour que tout marche sans passer par l'interface. */
+  /** First boot: a profile created from LASTFM_USER, so everything works without going through the UI. */
   onModuleInit() {
     const user = process.env.LASTFM_USER?.trim();
     if (!user || this.list().length > 0) return;
@@ -75,7 +75,7 @@ export class ProfilesService implements OnModuleInit {
     if (!liked || liked.startsWith("/") || liked.startsWith(".") || liked.split("/").includes("..")) {
       throw new BadRequestException("Dossier des titres aimés invalide (chemin relatif dans Musiques)");
     }
-    // Les titres aimés rangés dans le dossier des découvertes seraient supprimés au ménage suivant.
+    // Liked tracks stored in the discoveries folder would be deleted by the next cleanup.
     if (liked.toLowerCase() === discovery || liked.toLowerCase().startsWith(`${discovery}/`)) {
       throw new BadRequestException(`Le dossier des titres aimés ne peut pas être dans ${env.paths.discoverySubdir}`);
     }
@@ -107,7 +107,7 @@ export class ProfilesService implements OnModuleInit {
 
   update(id: number, patch: Partial<ProfileInput>): Profile {
     const current = this.get(id);
-    // Jeton non renvoyé par l'interface (masqué) : on garde l'actuel.
+    // Token not sent back by the UI (masked): keep the current one.
     const next: ProfileInput = { ...current, ...patch, plexToken: patch.plexToken === undefined ? current.plexToken : patch.plexToken };
     this.validate(next, id);
     this.db.run(

@@ -24,9 +24,9 @@ class StepError extends Error {
 }
 
 /**
- * Cycle d'un profil :
- *   sélection Last.fm -> (validation dans l'interface) -> téléchargement pickarr -> playlist Plex -> ménage des semaines précédentes.
- * Une seule exécution à la fois par profil ; une semaine « downloading » restée en plan (redémarrage) est reprise.
+ * A profile's cycle:
+ *   Last.fm selection -> (review in the UI) -> pickarr download -> Plex playlist -> cleanup of the previous weeks.
+ * One run at a time per profile; a "downloading" week left hanging (restart) is resumed.
  */
 @Injectable()
 export class DiscoveryService implements OnModuleInit {
@@ -50,7 +50,7 @@ export class DiscoveryService implements OnModuleInit {
 
   onModuleInit() {
     this.runs.closeInterrupted();
-    // Semaines dont le téléchargement a été interrompu : reprises en arrière-plan.
+    // Weeks whose download was interrupted: resumed in the background.
     for (const profile of this.profiles.list()) {
       const interrupted = this.weeks.weeksWithStatus(profile.id, "downloading")[0];
       if (interrupted) void this.execute(profile, "manual", () => this.downloadAndActivate(profile, interrupted));
@@ -80,7 +80,7 @@ export class DiscoveryService implements OnModuleInit {
     }
   }
 
-  /** Exécute `work` pour un profil, avec verrou, trace dans « runs » et notification en cas d'échec. */
+  /** Runs `work` for a profile, with a lock, a record in "runs" and a notification on failure. */
   private async execute(profile: Profile, trigger: RunTrigger, work: () => Promise<void>): Promise<void> {
     if (this.activities.has(profile.id)) throw new ConflictException(`Un lancement est déjà en cours pour ${profile.name}`);
     const dryRun = this.settings.get().dryRun;
@@ -88,7 +88,7 @@ export class DiscoveryService implements OnModuleInit {
     try {
       this.database.backup();
     } catch (err) {
-      // Une sauvegarde ratée ne bloque pas le lancement : la base reste intacte, on prévient seulement.
+      // A failed backup does not block the run: the database is untouched, just warn.
       this.logger.warn(`Sauvegarde de la base impossible : ${(err as Error).message}`);
       await this.discord.error("Sauvegarde de la base impossible", (err as Error).message);
     }
@@ -107,7 +107,7 @@ export class DiscoveryService implements OnModuleInit {
     }
   }
 
-  /** Lancement complet (planifié ou manuel). Rend la main tout de suite : le travail continue en arrière-plan. */
+  /** Full run (scheduled or manual). Returns right away: the work continues in the background. */
   start(profileId: number, trigger: RunTrigger): void {
     const profile = this.profiles.get(profileId);
     if (this.activities.has(profile.id)) throw new ConflictException(`Un lancement est déjà en cours pour ${profile.name}`);
@@ -117,13 +117,13 @@ export class DiscoveryService implements OnModuleInit {
   private async cycle(profile: Profile, trigger: RunTrigger) {
     const settings = this.settings.get();
 
-    // Simulations précédentes : sans fichiers, elles ne servent plus.
+    // Previous dry runs: without files, they are no longer useful.
     this.weeks.weeksWithStatus(profile.id, "dryrun").forEach((w) => this.weeks.deleteWeek(w.id));
 
     const inReview = this.weeks.weeksWithStatus(profile.id, "review")[0];
     if (inReview) {
       if (trigger === "manual") throw new StepError("sélection", "Une sélection attend ta validation : valide-la ou supprime-la d'abord");
-      return; // lancement planifié : la sélection en attente sera validée par toi, ou d'office après le délai
+      return; // scheduled run: the pending selection will be approved by the user, or automatically after the delay
     }
 
     await this.step(profile.id, "connexion à Plex", () => this.plex.identity());
@@ -148,12 +148,12 @@ export class DiscoveryService implements OnModuleInit {
     await this.downloadAndActivate(profile, week);
   }
 
-  /** Sélection des candidats, liens et extraits. La semaine est créée en « review ». */
+  /** Picks candidates, links and previews. The week is created in "review". */
   private async generate(profile: Profile, dryRun: boolean): Promise<Week> {
     const settings = this.settings.get();
     const proposed = this.weeks.proposedKeys(profile.id);
     const blocked = this.profiles.blockedKeys(profile.id);
-    // Marge pour les téléchargements qui échouent (et, en validation, pour les titres que tu écartes).
+    // Margin for failed downloads (and, in review mode, for the tracks the user rejects).
     const wanted = Math.ceil(profile.tracks * (profile.reviewMode ? 1.6 : 1.3));
 
     const candidates = await this.step(profile.id, "sélection Last.fm", () =>
@@ -193,13 +193,13 @@ export class DiscoveryService implements OnModuleInit {
     return this.ytmusic.findSong(artist, title).catch(() => null);
   }
 
-  /** Validation de la sélection depuis l'interface : les titres non écartés sont téléchargés. */
+  /** Approval of the selection from the UI: tracks not rejected are downloaded. */
   approve(weekId: number, trigger: RunTrigger = "review") {
     const week = this.weeks.week(weekId);
     if (week.status !== "review") throw new BadRequestException("Cette sélection n'attend pas de validation");
     const profile = this.profiles.get(week.profileId);
     const tracks = this.weeks.tracks(week.id);
-    // « queued » : une validation précédente a échoué avant le téléchargement, ces titres restent retenus.
+    // "queued": a previous approval failed before downloading, these tracks stay selected.
     const kept = tracks.filter((t) => t.status === "candidate" || t.status === "queued");
     if (kept.length === 0) throw new BadRequestException("Tous les titres ont été écartés");
     if (this.activities.has(profile.id)) throw new ConflictException(`Un lancement est déjà en cours pour ${profile.name}`);
@@ -208,7 +208,7 @@ export class DiscoveryService implements OnModuleInit {
     void this.execute(profile, trigger, () => this.downloadAndActivate(profile, week));
   }
 
-  /** Reprise d'un téléchargement interrompu (pickarr injoignable, redémarrage…). Les picks déjà envoyés ne sont pas renvoyés. */
+  /** Resumes an interrupted download (pickarr unreachable, restart…). Picks already sent are not sent again. */
   resume(weekId: number) {
     const week = this.weeks.week(weekId);
     if (week.status !== "downloading") throw new BadRequestException("Ce téléchargement n'est pas à reprendre");
@@ -217,7 +217,7 @@ export class DiscoveryService implements OnModuleInit {
     void this.execute(profile, "manual", () => this.downloadAndActivate(profile, week));
   }
 
-  /** Validation d'office des sélections en attente depuis trop longtemps (appelé toutes les heures). */
+  /** Auto-approves selections pending for too long (called every hour). */
   autoApprove() {
     const hours = this.settings.get().reviewAutoApproveHours;
     if (hours <= 0) return;
@@ -270,9 +270,9 @@ export class DiscoveryService implements OnModuleInit {
     if (imported.length === 0) throw new StepError("téléchargement", "Aucun titre n'a été importé par pickarr");
 
     const ratingKeys = await this.step(profile.id, "playlist Plex", async () => {
-      // pickarr demande déjà un scan, mais on ne compte pas dessus : un scan de plus ne coûte rien.
+      // pickarr already requests a scan, but do not rely on it: one more scan costs nothing.
       await this.plex.scanFolder(toPlexPath(discoveryDir()));
-      // Délai commun à tous les titres : un titre jamais indexé ne doit pas faire attendre 5 min chacun des suivants.
+      // One deadline shared by all tracks: a track never indexed must not make each following one wait 5 min.
       const deadline = Date.now() + 10 * 60_000;
       const keys: string[] = [];
       for (const [index, track] of imported.entries()) {
@@ -287,7 +287,7 @@ export class DiscoveryService implements OnModuleInit {
     });
     this.weeks.setWeekStatus(week.id, "active");
 
-    // Le ménage se fait une fois la nouvelle playlist en place.
+    // The cleanup runs once the new playlist is in place.
     const summary = [
       `**${ratingKeys.length}** titres dans « ${profile.playlistTitle} » (${imported.length} importés, ${sent.length - imported.length} échecs).`,
     ];
@@ -303,7 +303,7 @@ export class DiscoveryService implements OnModuleInit {
     await this.discord.summary(`${profile.name} : ${profile.playlistTitle}`, summary);
   }
 
-  /** Lancement manuel du seul ménage (par ex. après une panne de Plex). */
+  /** Manual run of the cleanup alone (e.g. after a Plex outage). */
   startCleanup(profileId: number) {
     const profile = this.profiles.get(profileId);
     const current = this.weeks.weeksWithStatus(profile.id, "active").at(-1);

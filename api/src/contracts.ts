@@ -1,27 +1,27 @@
 /**
- * Types partagés avec le front (importés par web/ via le workspace) : uniquement des types, sans aucun import,
- * pour que le front puisse les lire sans tirer Nest ni Node.
- * Les types internes (Profile, Track…) et ce que l'API renvoie (…Dto) sont distingués : le jeton Plex et les chemins
- * de fichiers ne sortent jamais vers le navigateur.
+ * Types shared with the front end (imported by web/ through the workspace): types only, no imports at all,
+ * so the front end can read them without pulling in Nest or Node.
+ * Internal types (Profile, Track…) and what the API returns (…Dto) are kept apart: the Plex token and file paths
+ * never reach the browser.
  */
 
 export interface Settings {
-  /** Planification du lancement hebdomadaire (expression cron, fuseau TZ). */
+  /** Weekly run schedule (cron expression, TZ time zone). */
   cron: string;
-  /** Lancement planifié actif. */
+  /** Scheduled run enabled. */
   scheduleEnabled: boolean;
-  /** Ne télécharge, ne déplace et ne supprime rien : journalise seulement. */
+  /** Downloads, moves and deletes nothing: only logs. */
   dryRun: boolean;
-  /** Note Plex minimale pour qu'un titre compte comme aimé (❤️ = 10). */
+  /** Minimum Plex rating for a track to count as liked (❤️ = 10). */
   likedMinRating: number;
-  /** Un titre ajouté à une autre playlist manuelle est gardé. */
+  /** A track added to another manual playlist is kept. */
   keepIfInOtherPlaylist: boolean;
-  /** Part de titres d'artistes jamais écoutés (0 à 1). */
+  /** Share of tracks from never-played artists (0 to 1). */
   newArtistRatio: number;
   maxPerArtist: number;
-  /** Délai max d'attente des téléchargements pickarr. */
+  /** Maximum wait for pickarr downloads. */
   pickarrTimeoutHours: number;
-  /** En mode validation : délai après lequel les candidats sont validés d'office (0 = jamais). */
+  /** In review mode: delay after which candidates are auto-approved (0 = never). */
   reviewAutoApproveHours: number;
   discordWebhookUrl: string;
   notifySuccess: boolean;
@@ -31,12 +31,12 @@ export interface Profile {
   id: number;
   name: string;
   lastfmUser: string;
-  /** Jeton Plex de l'utilisateur (notes et playlist à son nom) ; null = jeton administrateur. */
+  /** The user's Plex token (ratings and playlist under their account); null = admin token. */
   plexToken: string | null;
   playlistTitle: string;
   tracks: number;
   likedSubdir: string;
-  /** Les candidats attendent une validation dans l'interface avant téléchargement. */
+  /** Candidates wait for approval in the UI before downloading. */
   reviewMode: boolean;
   enabled: boolean;
   createdAt: string;
@@ -44,20 +44,20 @@ export interface Profile {
 
 export type ProfileInput = Omit<Profile, "id" | "createdAt">;
 
-/** Le jeton Plex n'est jamais renvoyé au navigateur. */
+/** The Plex token is never sent back to the browser. */
 export type ProfileDto = Omit<Profile, "plexToken"> & { hasPlexToken: boolean };
 
 export type WeekStatus = "dryrun" | "review" | "downloading" | "active" | "cleaned";
 
 export type TrackStatus =
-  | "candidate" // proposé, en attente de validation
-  | "rejected" // écarté à la validation
-  | "queued" // validé, envoyé (ou à envoyer) à pickarr
-  | "imported" // dans la bibliothèque et la playlist
-  | "failed" // téléchargement en échec
-  | "pending" // ménage reporté (doute, Plex injoignable)
-  | "liked" // gardé et déplacé
-  | "deleted"; // supprimé au ménage
+  | "candidate" // suggested, awaiting review
+  | "rejected" // rejected during review
+  | "queued" // approved, sent (or to be sent) to pickarr
+  | "imported" // in the library and the playlist
+  | "failed" // download failed
+  | "pending" // cleanup postponed (doubt, Plex unreachable)
+  | "liked" // kept and moved
+  | "deleted"; // deleted by the cleanup
 
 export interface Week {
   id: number;
@@ -93,7 +93,7 @@ export interface Track {
   updatedAt: string;
 }
 
-/** Ce que le navigateur voit d'un titre (sans chemin de fichier). */
+/** What the browser sees of a track (no file path). */
 export type TrackDto = Omit<Track, "file"> & { hasFile: boolean };
 
 export type WeekDto = Week & { tracks: TrackDto[] };

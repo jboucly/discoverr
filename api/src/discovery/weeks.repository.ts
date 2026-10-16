@@ -80,7 +80,7 @@ export class WeeksRepository {
   }
 
   setWeekStatus(id: number, status: WeekStatus) {
-    // node:sqlite refuse un paramètre nommé non utilisé : la date n'est passée que si la colonne est mise à jour.
+    // node:sqlite rejects an unused named parameter: the date is only passed when the column is updated.
     if (status === "active") this.db.run("UPDATE weeks SET status = ?, activated_at = ? WHERE id = ?", [status, now(), id]);
     else if (status === "cleaned") this.db.run("UPDATE weeks SET status = ?, cleaned_at = ? WHERE id = ?", [status, now(), id]);
     else this.db.run("UPDATE weeks SET status = ? WHERE id = ?", [status, id]);
@@ -125,7 +125,7 @@ export class WeeksRepository {
     this.db.run(`UPDATE tracks SET ${sets.join(", ")}, updated_at = :updated_at WHERE id = :id`, params);
   }
 
-  /** Clés déjà proposées à ce profil (hors simulations et rejets), pour ne jamais reproposer un titre. */
+  /** Keys already suggested to this profile (excluding dry runs and rejections), so a track is never suggested twice. */
   proposedKeys(profileId: number): Set<string> {
     return new Set(
       this.db
@@ -138,7 +138,7 @@ export class WeeksRepository {
     );
   }
 
-  /** Autres titres encore « vivants » (tous profils) qui pointent sur le même fichier. */
+  /** Other tracks still "alive" (all profiles) pointing to the same file. */
   othersUsingFile(file: string, exceptTrackId: number): Track[] {
     return this.db
       .all<Record<string, unknown>>("SELECT * FROM tracks WHERE file = ? AND id != ? AND status IN ('imported', 'pending')", [file, exceptTrackId])

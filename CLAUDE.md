@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-discoverr builds a weekly "Discover Weekly"-style Plex playlist from Last.fm listening history, downloads the tracks through [pickarr](https://gitlab.com/dhmetha/pickarr), and deletes the ones the user did not ❤️. UI and code comments are in French. See [README.md](README.md) for the user-facing description and [CONTEXT.md](CONTEXT.md) for project history, decisions, what is verified or not, and open items — read it before starting new work.
+discoverr builds a weekly "Discover Weekly"-style Plex playlist from Last.fm listening history, downloads the tracks through [pickarr](https://gitlab.com/dhmetha/pickarr), and deletes the ones the user did not ❤️. The UI is in French; code and code comments are always in English. See [README.md](README.md) for the user-facing description and [CONTEXT.md](CONTEXT.md) for project history, decisions, what is verified or not, and open items — read it before starting new work.
 
 ## Commands
 

@@ -1,10 +1,10 @@
 import { ConsoleLogger } from "@nestjs/common";
 import type { LogLine } from "../contracts";
 
-/** Les dernières lignes de log, gardées en mémoire pour la page « Journal ». */
+/** The latest log lines, kept in memory for the "Journal" page. */
 export const logBuffer: LogLine[] = [];
 
-/** Bruit du démarrage de Nest (une ligne par route) : utile en console, pas dans le Journal. */
+/** Nest startup noise (one line per route): useful in the console, not in the Journal. */
 const NOISY = new Set(["RouterExplorer", "RoutesResolver", "InstanceLoader"]);
 
 export class BufferedLogger extends ConsoleLogger {

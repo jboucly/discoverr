@@ -28,7 +28,7 @@ export class SettingsService {
 
   constructor(private readonly db: DatabaseService) {}
 
-  /** Valeurs en base, complétées par les valeurs par défaut (et, au premier démarrage, par l'environnement). */
+  /** Values from the database, completed by the defaults (and, on first boot, by the environment). */
   get(): Settings {
     if (this.cache) return this.cache;
     const rows = this.db.all<{ key: string; value: string }>("SELECT key, value FROM settings");

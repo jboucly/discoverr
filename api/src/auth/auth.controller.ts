@@ -30,7 +30,7 @@ export class AuthController {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
-      // Secure seulement en HTTPS (tunnel Cloudflare) : en HTTP sur le réseau local, le navigateur refuserait le cookie.
+      // Secure only over HTTPS (Cloudflare tunnel): over plain HTTP on the LAN, the browser would reject the cookie.
       secure: req.protocol === "https",
       maxAge: SESSION_DAYS * 86_400,
     });

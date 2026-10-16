@@ -18,7 +18,7 @@ import { ProfilesService, type ProfileInput } from "../../src/profiles/profiles.
 import { SettingsService } from "../../src/settings/settings.service";
 import { FakePickarr, FakePlex, serve, ytLink } from "./fakes";
 
-// Les attentes (scan Plex, sondage pickarr, essais HTTP) deviennent instantanées.
+// Waits (Plex scan, pickarr polling, HTTP retries) become instant.
 mock.method(text as { sleep: (ms: number) => Promise<unknown> }, "sleep", async () => undefined);
 
 export const PLEX_ROOT = "/media/Musiques";
@@ -32,11 +32,11 @@ export const candidate = (artist: string, title: string, kind: Candidate["kind"]
 });
 
 export interface WorldOptions {
-  /** Découvertes dans la bibliothèque du pickarr principal (PICKARR_SUBFOLDER) au lieu d'une instance dédiée. */
+  /** Discoveries in the main pickarr's library (PICKARR_SUBFOLDER) instead of a dedicated instance. */
   shared?: boolean;
 }
 
-/** Une installation complète : vrais services discoverr, base et dossier de musique temporaires, faux Plex et pickarr. */
+/** A full setup: real discoverr services, temporary database and music folder, fake Plex and pickarr. */
 export async function createWorld(options: WorldOptions = {}) {
   const root = mkdtempSync(path.join(os.tmpdir(), "discoverr-test-"));
   const musicRoot = path.join(root, "Musiques");
@@ -67,7 +67,7 @@ export async function createWorld(options: WorldOptions = {}) {
   const pickarrService = new PickarrService();
   const cleanup = new CleanupService(weeks, plexService, pickarrService, settings, profiles);
 
-  /** Last.fm simulé : propose `pool` dans l'ordre, en appliquant le vrai filtre d'exclusion (déjà proposé, déjà dans Plex…). */
+  /** Stubbed Last.fm: suggests `pool` in order, applying the real exclusion filter (already suggested, already in Plex…). */
   const lastfm = {
     pool: [] as Candidate[],
     async pickCandidates(opts: PickOptions) {
@@ -111,7 +111,7 @@ export async function createWorld(options: WorldOptions = {}) {
     );
   const discovery = newDiscovery();
 
-  /** Attend la fin du travail en arrière-plan d'un profil, puis renvoie la trace du lancement. */
+  /** Waits for a profile's background work to finish, then returns the run record. */
   async function settle(profileId: number, service = discovery) {
     while (service.isRunning(profileId)) await new Promise((resolve) => setTimeout(resolve, 5));
     return runs.list(profileId, 1)[0]!;
@@ -150,7 +150,7 @@ export async function createWorld(options: WorldOptions = {}) {
       });
     },
 
-    /** Lancement complet avec `pool` comme candidats Last.fm. */
+    /** Full run with `pool` as the Last.fm candidates. */
     async run(profileId: number, pool: Candidate[]) {
       lastfm.pool = pool;
       discovery.start(profileId, "manual");

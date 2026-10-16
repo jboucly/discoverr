@@ -11,7 +11,7 @@ import { ProfilesService } from "../profiles/profiles.service";
 
 const gb = (bytes: number) => `${(bytes / 1024 ** 3).toFixed(1)} Go`;
 
-/** Page « État » : tout ce qui doit marcher pour qu'un lancement réussisse, vérifié en direct. */
+/** "État" page: everything that must work for a run to succeed, checked live. */
 @Injectable()
 export class HealthService {
   constructor(

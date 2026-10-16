@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import type { Stats, WeekStat } from "../contracts";
 import { DatabaseService } from "../db/database.service";
 
-/** Chiffres calculés sur l'historique en base. Une semaine compte dès qu'elle a été téléchargée. */
+/** Figures computed from the history in the database. A week counts once it has been downloaded. */
 @Injectable()
 export class StatsService {
   constructor(private readonly db: DatabaseService) {}
@@ -32,7 +32,7 @@ export class StatsService {
       [profileId],
     ) ?? { proposed: 0, liked: 0, decided: 0, queued: 0, failed: 0, lossless: 0 };
 
-    // Taux de ❤️ selon l'origine : titres proches de tes écoutes vs nouveaux artistes.
+    // ❤️ rate by origin: tracks close to the user's listening vs new artists.
     const byKind = this.db.all<{ kind: string; decided: number; liked: number }>(
       `SELECT t.kind, SUM(t.status IN ('liked', 'deleted')) AS decided, SUM(t.status = 'liked') AS liked
        FROM tracks t JOIN weeks w ON w.id = t.week_id

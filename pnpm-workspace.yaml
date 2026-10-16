@@ -9,3 +9,8 @@ onlyBuiltDependencies:
 # Dependency of ytmusic-api, its install script is not needed.
 ignoredBuiltDependencies:
   - '@biomejs/biome'
+
+# Single fastify copy: @nestjs/platform-fastify 11 pins an older 5.x, and two copies break the
+# plugin types (FastifyInstance mismatch). Keep it equal to api/package.json.
+overrides:
+  fastify: 5.12.5

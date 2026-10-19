@@ -64,9 +64,31 @@ export class CleanupService {
     await this.pickarr.deletePick(track.pickId).catch((err) => this.logger.warn(`Pick ${track.pickId} non retiré de pickarr : ${err.message}`));
   }
 
+  private likedDest(file: string, profile: Profile) {
+    return path.join(musicDir(profile.likedSubdir), path.relative(discoveryDir(), file));
+  }
+
+  /**
+   * @description Copies the album cover next to the moved track. Best effort: a missing cover is cosmetic and must
+   * never fail the move. readFile/writeFile rather than fs.copyFile, which also copies the file mode (fchmod) and fails
+   * with EPERM on shares that refuse chmod.
+   * @returns A warning when the cover could not be copied.
+   */
+  private async copyCover(fromDir: string, toDir: string): Promise<string | null> {
+    const cover = path.join(fromDir, "cover.jpg");
+    const destCover = path.join(toDir, "cover.jpg");
+    if (!(await exists(cover)) || (await exists(destCover))) return null;
+    try {
+      await fs.writeFile(destCover, await fs.readFile(cover), { flag: "wx" });
+      return null;
+    } catch (err) {
+      return `pochette non copiée (${(err as Error).message})`;
+    }
+  }
+
   private async moveLiked(track: Track, plexTrack: PlexTrack, profile: Profile, dryRun: boolean, result: CleanupResult) {
     const file = track.file!;
-    const dest = path.join(musicDir(profile.likedSubdir), path.relative(discoveryDir(), file));
+    const dest = this.likedDest(file, profile);
     if (await exists(dest)) {
       result.warnings.push(`${label(track)} : déjà présent dans ${profile.likedSubdir}, laissé dans les découvertes`);
       if (!dryRun) this.weeks.updateTrack(track.id, { status: "liked", error: "Déjà présent dans le dossier des aimés" });
@@ -81,23 +103,56 @@ export class CleanupService {
 
     await fs.mkdir(path.dirname(dest), { recursive: true });
     await fs.rename(file, dest);
-    const cover = path.join(path.dirname(file), "cover.jpg");
-    const destCover = path.join(path.dirname(dest), "cover.jpg");
-    if ((await exists(cover)) && !(await exists(destCover))) await fs.copyFile(cover, destCover);
-    await this.pruneDirs(path.dirname(file), false);
+    // Record the move right away: anything failing after this point must not leave the database pointing to the old path.
     this.weeks.moveFileReferences(file, dest);
     this.weeks.updateTrack(track.id, { status: "liked", rating: plexTrack.userRating ?? null });
+    await this.finishLiked(track, file, dest, plexTrack.userRating ?? null, profile, result);
+  }
+
+  /**
+   * @description Second half of a move, shared with the recovery of a move interrupted after the rename: cover,
+   * emptied folders, Plex rescan and rating, pickarr pick.
+   */
+  private async finishLiked(track: Track, file: string, dest: string, rating: number | null, profile: Profile, result: CleanupResult) {
+    const coverWarning = await this.copyCover(path.dirname(file), path.dirname(dest));
+    if (coverWarning) result.warnings.push(`${label(track)} : ${coverWarning}`);
+    await this.pruneDirs(path.dirname(file), false);
 
     // Plex may see the moved file as a new item: set the rating again so it stays in ❤️ Tracks.
     const token = profile.plexToken ?? undefined;
     await this.plex.scanFolder(toPlexPath(path.dirname(file))).catch(() => undefined);
     await this.plex.scanFolder(toPlexPath(path.dirname(dest)));
-    const moved = await this.plex.findByFile(toPlexPath(dest), plexTrack.title, token);
+    const moved = await this.plex.findByFile(toPlexPath(dest), track.title, token);
     if (!moved) result.warnings.push(`${label(track)} : déplacé, mais introuvable dans Plex après le scan (note à remettre à la main)`);
-    else if ((moved.userRating ?? 0) < (plexTrack.userRating ?? 0)) await this.plex.rate(moved.ratingKey, plexTrack.userRating!, token);
+    else if (rating !== null && (moved.userRating ?? 0) < rating) await this.plex.rate(moved.ratingKey, rating, token);
     this.weeks.updateTrack(track.id, { ratingKey: moved?.ratingKey ?? null });
     await this.releasePick(track);
     result.liked.push(label(track));
+  }
+
+  /**
+   * @description A previous cleanup moved the file to the liked folder but failed before recording it (e.g. EPERM on
+   * the cover copy): finish that move instead of taking the track for an already deleted one.
+   * @returns Whether the track was recovered.
+   */
+  private async recoverInterruptedMove(track: Track, profile: Profile, dryRun: boolean, result: CleanupResult) {
+    if (!track.file || track.status !== "pending") return false;
+    const dest = this.likedDest(track.file, profile);
+    if (!(await exists(dest))) return false;
+    if (dryRun) {
+      this.logger.log(`[DRY_RUN] reprise du déplacement ${track.file} -> ${dest}`);
+      result.liked.push(label(track));
+      return true;
+    }
+    const token = profile.plexToken ?? undefined;
+    // The old Plex item usually survives until the trash is emptied, with its rating.
+    const old = track.ratingKey ? await this.plex.getTrack(track.ratingKey, token).catch(() => null) : null;
+    const rating = old?.userRating ?? track.rating ?? null;
+    const file = track.file;
+    this.weeks.moveFileReferences(file, dest);
+    this.weeks.updateTrack(track.id, { status: "liked", rating, error: null });
+    await this.finishLiked(track, file, dest, rating, profile, result);
+    return true;
   }
 
   private async deleteTrack(track: Track, dryRun: boolean, result: CleanupResult) {
@@ -136,6 +191,7 @@ export class CleanupService {
     for (const track of this.weeks.tracks(week.id).filter((t) => t.status === "imported" || t.status === "pending")) {
       try {
         if (!track.file || !(await exists(track.file))) {
+          if (await this.recoverInterruptedMove(track, profile, dryRun, result)) continue;
           if (!dryRun) this.weeks.updateTrack(track.id, { status: "deleted", error: "Fichier déjà absent" });
           continue;
         }

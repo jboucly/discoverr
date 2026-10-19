@@ -1,6 +1,7 @@
 import "./support/env";
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, renameSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, test } from "node:test";
 import { env } from "../src/env";
 import { writeAudio } from "./support/fakes";
@@ -57,6 +58,53 @@ describe("ménage", () => {
       w.plex.playlistKeys("Découvertes de la semaine"),
       w.weeks.tracks(week2!.id).slice(0, 4).map((t) => t.ratingKey),
     );
+  });
+
+  test("pochette impossible à copier : le titre est quand même déplacé et suivi", async () => {
+    w = await createWorld();
+    const profile = w.addProfile({ tracks: 2, likedSubdir: "pickarr" });
+    await w.run(profile.id, [candidate("A", "1"), candidate("B", "2"), candidate("C", "3")]);
+    const [week] = w.weeks.weeks(profile.id);
+    const hearted = byTitle(w, week!.id, "1");
+    w.plex.items.get(hearted.ratingKey!)!.userRating = 10;
+    // An unreadable cover stands in for the EPERM seen on the NAS share.
+    chmodSync(path.join(path.dirname(hearted.file!), "cover.jpg"), 0);
+
+    const result = await w.cleanup.cleanWeek(week!, profile);
+
+    const t = byTitle(w, week!.id, "1");
+    assert.equal(t.status, "liked");
+    assert.equal(t.file, w.local("pickarr", "A", "A - Singles", "1.m4a"));
+    assert.ok(existsSync(t.file!));
+    assert.equal(w.plex.itemByLocalFile(t.file!)!.userRating, 10);
+    assert.ok(result.warnings.some((m) => m.startsWith("A - 1 : pochette non copiée")));
+    assert.deepEqual(result.pending, []);
+    assert.equal(w.weeks.week(week!.id).status, "cleaned");
+  });
+
+  test("déplacement interrompu par un ancien ménage : repris au ménage suivant", async () => {
+    w = await createWorld();
+    const profile = w.addProfile({ tracks: 2, likedSubdir: "pickarr" });
+    await w.run(profile.id, [candidate("A", "1"), candidate("B", "2"), candidate("C", "3")]);
+    const [week] = w.weeks.weeks(profile.id);
+    const hearted = byTitle(w, week!.id, "1");
+    w.plex.items.get(hearted.ratingKey!)!.userRating = 10;
+    // State left by the old code: file renamed, then the cover copy threw before the database was updated.
+    const dest = w.local("pickarr", "A", "A - Singles", "1.m4a");
+    mkdirSync(path.dirname(dest), { recursive: true });
+    renameSync(hearted.file!, dest);
+    w.weeks.updateTrack(hearted.id, { status: "pending", error: "EPERM: operation not permitted, copyfile" });
+
+    const result = await w.cleanup.cleanWeek(week!, profile);
+
+    const t = byTitle(w, week!.id, "1");
+    assert.equal(t.status, "liked");
+    assert.equal(t.file, dest);
+    assert.equal(t.error, null);
+    assert.equal(w.plex.itemByLocalFile(dest)!.userRating, 10);
+    assert.ok(existsSync(w.local("pickarr", "A", "A - Singles", "cover.jpg")), "pochette non copiée");
+    assert.ok(!existsSync(w.local("Decouvertes", "A")), "dossier vide non supprimé");
+    assert.equal(w.weeks.week(week!.id).status, "cleaned");
   });
 
   test("un fichier encore proposé à un autre profil n'est supprimé qu'au dernier ménage", async () => {

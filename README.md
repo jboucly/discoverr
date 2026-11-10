@@ -317,6 +317,8 @@ docker build -t discoverr .
 - `X.Y.Z` and `X.Y` on `vX.Y.Z` tags;
 - `sha-…` on each commit.
 
+**Releases:** run `pnpm release 2.1.0` on a clean working tree. The script sets the version in the three `package.json` files, commits `chore(release): v2.1.0` and creates the `v2.1.0` tag. Then push the branch and the tag (`git push origin main v2.1.0`). For that tag, the CI checks that it matches `package.json`, runs the tests, publishes the image and creates the **GitHub release**. The release notes list the `feat`, `fix`, `perf`, `refactor`, `build`, `ci` and `revert` commits since the previous tag. A tag with a suffix (`v2.1.0-rc.1`) becomes a pre-release.
+
 ---
 
 ## Known limitations

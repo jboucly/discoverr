@@ -14,9 +14,10 @@ pnpm build                               # both packages
 pnpm dev                                 # API (:3000, tsc --watch + node --watch, reads api/.env) and Vite (:5175, proxies /api)
 cd api && pnpm build && pnpm start       # run the API once, without watching
 docker build -t discoverr .              # full image (front + API)
+pnpm release 2.1.0                       # bump the 3 package.json, commit and tag v2.1.0; pushing the tag releases
 ```
 
-Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/world.ts` wires the real services to a temp database and music folder, a fake Plex that indexes the real files (a moved file becomes a new unrated item) and a fake pickarr; Last.fm, YouTube Music, iTunes and Discord are stubbed. Add a scenario there when changing the cycle or the cleanup. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks, tests and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags).
+Tests live in `api/test/` (`node:test`, compiled to `dist-test/`): `support/world.ts` wires the real services to a temp database and music folder, a fake Plex that indexes the real files (a moved file becomes a new unrated item) and a fake pickarr; Last.fm, YouTube Music, iTunes and Discord are stubbed. Add a scenario there when changing the cycle or the cleanup. CI ([.github/workflows/docker.yml](.github/workflows/docker.yml)) type-checks, tests and builds both packages, then publishes `ghcr.io/<owner>/discoverr` (`latest` on main, semver on `v*` tags). On a `v*` tag it first checks the tag matches `package.json`, then creates the GitHub release with notes built from the conventional commits since the previous tag ([.github/scripts/release-notes.sh](.github/scripts/release-notes.sh)): keep commit messages conventional.
 
 ## Architecture
 

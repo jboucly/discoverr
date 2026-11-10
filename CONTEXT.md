@@ -122,11 +122,18 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 - **Webhooks Plex** (Plex Pass) : détecter un ❤️ tout de suite et déplacer le titre sans attendre le ménage.
 - Bouton **« Ajouter à ma bibliothèque »** pour garder un titre immédiatement.
 - **ListenBrainz** en plus ou à la place de Last.fm.
-- **Filtres de goûts** : exclure des genres (tags Last.fm), limiter la durée, écarter les lives et remixes.
+- **Filtres de goûts** (suite) : limiter la durée, écarter les lives et remixes. (L'exclusion de genres est faite, voir plus bas.)
 - **Métriques Prometheus** (`/api/metrics`) pour Grafana.
 - Playlist **« Radar »** : nouvelles sorties des artistes gardés.
 
 ### Fait depuis
+- **Diversité des genres** (10/11/2026) : après plusieurs semaines, Julien ne recevait que de la drum & bass. Il en écoute beaucoup, mais il aime aussi d'autres genres. La cause : les 40 graines étaient les plus écoutées, les scores de similarité s'additionnaient, et les « nouveaux artistes » venaient du top 3 mois. Désormais (`integrations/genres.ts`, `lastfm.service.ts`) :
+  - le genre principal de chaque artiste est son premier tag Last.fm qui est un genre (on ignore « seen live », les décennies, les nationalités…) ; les orthographes et les sous-genres sont fusionnés (dnb, neurofunk, liquid → drum and bass) ; les tags sont mis en cache 90 jours dans `artist_tags` ;
+  - graines (40), favoris (20), nouveaux artistes (25) et titres choisis sont répartis par genre, avec des quotas ∝ `poids^(1 − diversité)` arrondis par le plus fort reste ; ce qui manque est complété sans contrainte de genre ;
+  - historique plus long : top titres et top artistes sur 12 mois, 100 titres aimés ;
+  - réglages **par profil** : `genreDiversity` (0,5 par défaut) et `excludedGenres` (comparés aux 3 premiers tags de genre de l'artiste) ; le genre est enregistré sur chaque titre (`tracks.genre`) et affiché ;
+  - logs : répartition des genres écoutés, des graines et des titres choisis.
+  **Non vérifié en production** : qualité des tags Last.fm sur les petits artistes (genre « inconnu »), durée du premier lancement (environ 150 appels `artist.gettoptags` de plus, puis le cache).
 - **Suppression des titres introuvables dans Plex** (10/11/2026, réglage `deleteNotFoundInPlex`, désactivé par défaut) : certains titres (par exemple « Logistics - Toy Town ») restaient en attente à chaque ménage et prévenaient sur Discord chaque semaine. Une fois le réglage activé, un titre introuvable deux ménages d'affilée, et non marqué « Garder », passe par la suppression normale (vérification realpath, fichier partagé, garde-fou pickarr). Attendre le deuxième ménage évite de perdre un titre aimé à cause d'une erreur passagère de Plex. C'est une exception à « dans le doute on garde », faite à la demande de Julien. Pourquoi Plex ne trouve pas ces fichiers n'a pas été étudié.
 - **Deezer abandonné** (15/10/2026) : Akamai bloque toute l'IP publique de Julien (`api.deezer.com` et `www.deezer.com` en 403, depuis le Mac comme depuis le serveur), pas une limite de débit (qui répondrait `Quota limit exceeded`). Pochettes : vignette YouTube Music agrandie (`=w300-h300`). Extraits : API iTunes, recherche stricte (environ 2 titres sur 3 trouvés sur un échantillon drum & bass / phonk), 3 s entre appels, pause d'une heure après un 403/429. Contrôle « Extraits (iTunes) » sur la page État. **Vérifié en production le 15/10** : pochettes et extraits affichés. pickarr utilise aussi Deezer pour ses tags : il continue sans (403 → null), mais les tags peuvent être moins complets ; à signaler à dhmetha.
 - **Workspace pnpm** (pnpm 10.30.3, figé par `packageManager`) : un seul `pnpm-lock.yaml`, commandes à la racine. Les types des réponses de l'API sont dans `api/src/contracts.ts` et le front les importe (`discoverr-api/contracts`) au lieu de les recopier. Versions identiques à npm sauf rollup 4.64.6 → 4.64.7 et `@vue/compiler-*` 3.5.44 tiré par vue-tsc (outillage de build seulement). `fastify` ajouté aux dépendances de l'API : il était importé sans être déclaré.
@@ -136,4 +143,4 @@ discoverr est né dans le repo **media-server** de Julien (`/Users/jboucly/Proje
 
 ### Petites dettes connues
 - Le compose de media-server déclare encore `version: "3.8"` (obsolète, ignoré par Docker).
-- Le choix entre « titres similaires » et « nouveaux artistes » se fait par quota simple. L'ordre final est mélangé par Fisher-Yates (`shuffle` dans `common/text.ts`).
+- Le choix entre « titres similaires » et « nouveaux artistes » se fait par quota simple (puis par genre à l'intérieur de chaque groupe). L'ordre final est mélangé par Fisher-Yates (`shuffle` dans `common/text.ts`).

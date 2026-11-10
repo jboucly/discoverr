@@ -47,6 +47,27 @@ describe("cycle", () => {
     assert.ok(w.discord.messages.some((m) => m.level === "summary" && m.text.includes("**3** titres")));
   });
 
+  test("réglages de genres du profil transmis à la sélection, genre enregistré sur chaque titre", async () => {
+    const profile = w.addProfile({ tracks: 2, genreDiversity: 0.8, excludedGenres: ["Drum & Bass", " phonk ", "dnb", ""] });
+    assert.equal(profile.genreDiversity, 0.8);
+    assert.deepEqual(profile.excludedGenres, ["drum and bass", "phonk"]);
+
+    const run = await w.run(profile.id, [candidate("Alpha", "One", "similar", "house"), candidate("Bravo", "Two", "new-artist", "")]);
+
+    assert.equal(run.ok, true, run.error ?? "");
+    assert.equal(w.lastfm.lastOptions?.genreDiversity, 0.8);
+    assert.deepEqual(w.lastfm.lastOptions?.excludedGenres, ["drum and bass", "phonk"]);
+    const [week] = w.weeks.weeks(profile.id);
+    assert.deepEqual(
+      w.weeks.tracks(week!.id).map((t) => [t.title, t.genre]),
+      [
+        ["One", "house"],
+        ["Two", null],
+      ],
+    );
+    assert.throws(() => w.profiles.update(profile.id, { genreDiversity: 1.5 }), /entre 0 et 1/);
+  });
+
   test("titre tagué autrement que sur Last.fm : retrouvé dans Plex par son fichier", async () => {
     const profile = w.addProfile({ tracks: 1 });
     w.pickarr.taggedTitles.set("Machete - A.M.C Remix", "Machete (A.M.C Remix)");

@@ -78,4 +78,15 @@ export const MIGRATIONS: string[] = [
     error TEXT
   );
   `,
+  // Genre diversity: Last.fm tag cache, per-profile settings, genre shown on each track.
+  `
+  CREATE TABLE artist_tags (
+    artist_key TEXT PRIMARY KEY,
+    tags TEXT NOT NULL,
+    fetched_at TEXT NOT NULL
+  );
+  ALTER TABLE profiles ADD COLUMN genre_diversity REAL NOT NULL DEFAULT 0.5;
+  ALTER TABLE profiles ADD COLUMN excluded_genres TEXT NOT NULL DEFAULT '[]';
+  ALTER TABLE tracks ADD COLUMN genre TEXT;
+  `,
 ];

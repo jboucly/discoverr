@@ -41,11 +41,13 @@ Every week, discoverr picks tracks you have never listened to based on your **La
 
 Every week (Monday 3 AM by default), for each active profile:
 
-1. **Selection.** discoverr starts from your top tracks, loved tracks and recent scrobbles on Last.fm, then looks for:
+1. **Selection.** discoverr starts from your top tracks (1, 3 and 12 months), loved tracks and recent scrobbles on Last.fm, then looks for:
    - **similar tracks** (`track.getSimilar`);
    - **artists you have never listened to**, close to your favorites (30% by default).
 
-   It excludes what you have already listened to, what is already in Plex, what was already suggested to you, and blocked artists. It keeps at most 2 tracks per artist.
+   It excludes what you have already listened to, what is already in Plex, what was already suggested to you, blocked artists and the profile's **excluded genres**. It keeps at most 2 tracks per artist.
+
+   **Genre diversity** (per profile, 50% by default): each artist gets its main genre from its Last.fm tags (cached for 90 days), and the selection is split between the genres you listen to. At 0% the split follows your listening, so your most played genre dominates; at 100% every genre you listen to gets the same share. The genre is shown next to each track.
 2. **Review** (optional). If the profile is in review mode, the selection waits in the UI. You listen to the previews, discard what you don't fancy, then approve. Without any action, it is auto-approved after 48 h.
 3. **Download.** Each track is sent to a dedicated pickarr instance, which imports it into `Musiques/Decouvertes`.
 4. **Playlist.** The profile's Plex playlist is emptied, then filled with the new tracks. It is the same playlist every week, so it stays pinned in Plexamp.

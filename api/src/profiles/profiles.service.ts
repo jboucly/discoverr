@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleIni
 import { artistKey, now } from "../common/text";
 import { DatabaseService } from "../db/database.service";
 import { env } from "../env";
+import { canonicalGenre } from "../integrations/genres";
 import type { Profile, ProfileInput } from "../contracts";
 
 export type { Profile, ProfileInput };
@@ -15,9 +16,22 @@ interface Row {
   tracks: number;
   liked_subdir: string;
   review_mode: number;
+  genre_diversity: number;
+  excluded_genres: string;
   enabled: number;
   created_at: string;
 }
+
+/**
+ * @description Defaults of the genre settings, for a profile created without them (first boot, older scripts).
+ */
+export const DEFAULT_GENRE_DIVERSITY = 0.5;
+
+/**
+ * @description Excluded genres as stored: canonical, without duplicates or blanks.
+ * @param genres Genres typed by the user.
+ */
+const cleanGenres = (genres: string[] | undefined) => [...new Set((genres ?? []).map(canonicalGenre).filter(Boolean))];
 
 const toProfile = (r: Row): Profile => ({
   id: r.id,
@@ -28,6 +42,8 @@ const toProfile = (r: Row): Profile => ({
   tracks: r.tracks,
   likedSubdir: r.liked_subdir,
   reviewMode: r.review_mode === 1,
+  genreDiversity: r.genre_diversity,
+  excludedGenres: JSON.parse(r.excluded_genres) as string[],
   enabled: r.enabled === 1,
   createdAt: r.created_at,
 });
@@ -50,6 +66,8 @@ export class ProfilesService implements OnModuleInit {
       tracks: Number(process.env.DISCOVERR_TRACKS) || 30,
       likedSubdir: process.env.LIKED_SUBDIR?.trim() || "pickarr",
       reviewMode: false,
+      genreDiversity: DEFAULT_GENRE_DIVERSITY,
+      excludedGenres: [],
       enabled: true,
     });
     this.logger.log(`Profil « Moi » créé pour ${user}`);
@@ -70,6 +88,13 @@ export class ProfilesService implements OnModuleInit {
     if (!input.lastfmUser?.trim()) throw new BadRequestException("Compte Last.fm manquant");
     if (!input.playlistTitle?.trim()) throw new BadRequestException("Titre de playlist manquant");
     if (!Number.isInteger(input.tracks) || input.tracks < 1 || input.tracks > 100) throw new BadRequestException("Entre 1 et 100 titres");
+    if (typeof input.genreDiversity !== "number" || !(input.genreDiversity >= 0 && input.genreDiversity <= 1)) {
+      throw new BadRequestException("La diversité des genres doit être entre 0 et 1");
+    }
+    if (!Array.isArray(input.excludedGenres) || input.excludedGenres.some((g) => typeof g !== "string")) {
+      throw new BadRequestException("Genres exclus invalides");
+    }
+    if (cleanGenres(input.excludedGenres).length > 30) throw new BadRequestException("30 genres exclus au maximum");
     const liked = input.likedSubdir?.trim() ?? "";
     const discovery = env.paths.discoverySubdir.toLowerCase();
     if (!liked || liked.startsWith("/") || liked.startsWith(".") || liked.split("/").includes("..")) {
@@ -88,8 +113,9 @@ export class ProfilesService implements OnModuleInit {
   create(input: ProfileInput): Profile {
     this.validate(input);
     const { lastInsertRowid } = this.db.run(
-      `INSERT INTO profiles (name, lastfm_user, plex_token, playlist_title, tracks, liked_subdir, review_mode, enabled, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO profiles (name, lastfm_user, plex_token, playlist_title, tracks, liked_subdir, review_mode, genre_diversity,
+       excluded_genres, enabled, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         input.name.trim(),
         input.lastfmUser.trim(),
@@ -98,6 +124,8 @@ export class ProfilesService implements OnModuleInit {
         input.tracks,
         input.likedSubdir.trim(),
         input.reviewMode ? 1 : 0,
+        input.genreDiversity,
+        JSON.stringify(cleanGenres(input.excludedGenres)),
         input.enabled ? 1 : 0,
         now(),
       ],
@@ -112,7 +140,7 @@ export class ProfilesService implements OnModuleInit {
     this.validate(next, id);
     this.db.run(
       `UPDATE profiles SET name = ?, lastfm_user = ?, plex_token = ?, playlist_title = ?, tracks = ?, liked_subdir = ?,
-       review_mode = ?, enabled = ? WHERE id = ?`,
+       review_mode = ?, genre_diversity = ?, excluded_genres = ?, enabled = ? WHERE id = ?`,
       [
         next.name.trim(),
         next.lastfmUser.trim(),
@@ -121,6 +149,8 @@ export class ProfilesService implements OnModuleInit {
         next.tracks,
         next.likedSubdir.trim(),
         next.reviewMode ? 1 : 0,
+        next.genreDiversity,
+        JSON.stringify(cleanGenres(next.excludedGenres)),
         next.enabled ? 1 : 0,
         id,
       ],

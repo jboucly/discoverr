@@ -162,6 +162,8 @@ export class DiscoveryService implements OnModuleInit {
         count: wanted,
         newArtistRatio: settings.newArtistRatio,
         maxPerArtist: settings.maxPerArtist,
+        genreDiversity: profile.genreDiversity,
+        excludedGenres: profile.excludedGenres,
         exclude: async (c) =>
           proposed.has(c.key) || blocked.has(c.key.split("::")[0]!) || (await this.plex.isInLibrary(c.artist, c.title)),
       }),
@@ -178,7 +180,7 @@ export class DiscoveryService implements OnModuleInit {
           continue;
         }
         const previewUrl = await this.itunes.preview(c.artist, c.title);
-        result.push({ ...c, link: song.link, previewUrl, coverUrl: song.coverUrl, status: "candidate" as const, position: result.length });
+        result.push({ ...c, genre: c.genre || null, link: song.link, previewUrl, coverUrl: song.coverUrl, status: "candidate" as const, position: result.length });
       }
       return result;
     });

@@ -23,12 +23,13 @@ mock.method(text as { sleep: (ms: number) => Promise<unknown> }, "sleep", async 
 
 export const PLEX_ROOT = "/media/Musiques";
 
-export const candidate = (artist: string, title: string, kind: Candidate["kind"] = "similar"): Candidate => ({
+export const candidate = (artist: string, title: string, kind: Candidate["kind"] = "similar", genre = "drum and bass"): Candidate => ({
   artist,
   title,
   key: trackKey(artist, title),
   score: 1,
   kind,
+  genre,
 });
 
 export interface WorldOptions {
@@ -70,7 +71,9 @@ export async function createWorld(options: WorldOptions = {}) {
   /** Stubbed Last.fm: suggests `pool` in order, applying the real exclusion filter (already suggested, already in Plex…). */
   const lastfm = {
     pool: [] as Candidate[],
+    lastOptions: null as PickOptions | null,
     async pickCandidates(opts: PickOptions) {
+      this.lastOptions = opts;
       const picked: Candidate[] = [];
       for (const c of this.pool) {
         if (picked.length >= opts.count) break;
@@ -145,6 +148,8 @@ export async function createWorld(options: WorldOptions = {}) {
         tracks: 3,
         likedSubdir: "pickarr",
         reviewMode: false,
+        genreDiversity: 0.5,
+        excludedGenres: [],
         enabled: true,
         ...input,
       });

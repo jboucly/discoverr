@@ -43,6 +43,7 @@ const badge = computed(() => {
       </div>
       <div class="artist">
         {{ track.artist }}
+        <template v-if="track.genre"> · <span class="genre">{{ track.genre }}</span></template>
         <template v-if="track.quality"> · {{ track.quality }}</template>
       </div>
     </div>
@@ -67,6 +68,7 @@ const badge = computed(() => {
 .info { flex: 1; min-width: 0; }
 .title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .artist { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.genre { text-transform: capitalize; }
 .new { font-size: 11px; font-weight: 500; color: var(--info); margin-left: 6px; }
 .side { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 @media (max-width: 600px) {

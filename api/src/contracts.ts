@@ -43,6 +43,15 @@ export interface Profile {
   likedSubdir: string;
   /** Candidates wait for approval in the UI before downloading. */
   reviewMode: boolean;
+  /**
+   * @description Genre balance of the suggestions, from 0 to 1: 0 follows the listening (the most played genre dominates),
+   * 1 gives every genre of the user the same share.
+   */
+  genreDiversity: number;
+  /**
+   * @description Genres (Last.fm tags, canonical form) never suggested.
+   */
+  excludedGenres: string[];
   enabled: boolean;
   createdAt: string;
 }
@@ -80,6 +89,10 @@ export interface Track {
   title: string;
   key: string;
   kind: "similar" | "new-artist";
+  /**
+   * @description Main genre of the artist (Last.fm tag), null when unknown or for tracks suggested before genres existed.
+   */
+  genre: string | null;
   score: number;
   status: TrackStatus;
   link: string | null;

@@ -22,6 +22,7 @@ const toTrack = (r: Record<string, unknown>): Track => ({
   title: r.title as string,
   key: r.key as string,
   kind: r.kind as Track["kind"],
+  genre: (r.genre as string) ?? null,
   score: r.score as number,
   status: r.status as TrackStatus,
   link: (r.link as string) ?? null,
@@ -94,9 +95,9 @@ export class WeeksRepository {
     this.db.transaction(() => {
       for (const t of tracks) {
         this.db.run(
-          `INSERT INTO tracks (week_id, artist, title, key, kind, score, status, link, preview_url, cover_url, position, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [weekId, t.artist, t.title, t.key, t.kind, t.score, t.status, t.link, t.previewUrl, t.coverUrl, t.position, now()],
+          `INSERT INTO tracks (week_id, artist, title, key, kind, genre, score, status, link, preview_url, cover_url, position, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [weekId, t.artist, t.title, t.key, t.kind, t.genre, t.score, t.status, t.link, t.previewUrl, t.coverUrl, t.position, now()],
         );
       }
     });

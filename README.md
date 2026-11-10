@@ -41,17 +41,20 @@ Every week, discoverr picks tracks you have never listened to based on your **La
 
 Every week (Monday 3 AM by default), for each active profile:
 
-1. **Selection.** discoverr starts from your top tracks, loved tracks and recent scrobbles on Last.fm, then looks for:
+1. **Selection.** discoverr starts from your top tracks (1, 3 and 12 months), loved tracks and recent scrobbles on Last.fm, then looks for:
    - **similar tracks** (`track.getSimilar`);
    - **artists you have never listened to**, close to your favorites (30% by default).
 
-   It excludes what you have already listened to, what is already in Plex, what was already suggested to you, and blocked artists. It keeps at most 2 tracks per artist.
+   It excludes what you have already listened to, what is already in Plex, what was already suggested to you, blocked artists and the profile's **excluded genres**. It keeps at most 2 tracks per artist.
+
+   **Genre diversity** (per profile, 50% by default): each artist gets its main genre from its Last.fm tags (cached for 90 days), and the selection is split between the genres you listen to. At 0% the split follows your listening, so your most played genre dominates; at 100% every genre you listen to gets the same share. The genre is shown next to each track.
 2. **Review** (optional). If the profile is in review mode, the selection waits in the UI. You listen to the previews, discard what you don't fancy, then approve. Without any action, it is auto-approved after 48 h.
 3. **Download.** Each track is sent to a dedicated pickarr instance, which imports it into `Musiques/Decouvertes`.
 4. **Playlist.** The profile's Plex playlist is emptied, then filled with the new tracks. It is the same playlist every week, so it stays pinned in Plexamp.
 5. **Cleanup of the previous week**, once the new playlist is in place:
    - **kept**: ❤️ tracks (rating ≥ 10), tracks marked "Keep" in the UI, and tracks added to another of your playlists. They are moved to your folder (`Musiques/pickarr` by default) and their rating is preserved;
    - **deleted**: all the others, file and empty folders included.
+   - **in doubt** (Plex unreachable, track not found in Plex): the file is kept and retried on the next run. With **Delete tracks not found in Plex** (Settings, off by default), a track still not found at the second cleanup in a row is deleted, unless it is marked "Keep".
 
 ### Why a dedicated pickarr instance?
 
@@ -313,6 +316,8 @@ docker build -t discoverr .
 - `latest` on `main`;
 - `X.Y.Z` and `X.Y` on `vX.Y.Z` tags;
 - `sha-…` on each commit.
+
+**Releases:** run `pnpm release 2.1.0` on a clean working tree. The script sets the version in the three `package.json` files, commits `chore(release): v2.1.0` and creates the `v2.1.0` tag. Then push the branch and the tag (`git push origin main v2.1.0`). For that tag, the CI checks that it matches `package.json`, runs the tests, publishes the image and creates the **GitHub release**. The release notes list the `feat`, `fix`, `perf`, `refactor`, `build`, `ci` and `revert` commits since the previous tag. A tag with a suffix (`v2.1.0-rc.1`) becomes a pre-release.
 
 ---
 

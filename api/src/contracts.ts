@@ -16,6 +16,11 @@ export interface Settings {
   likedMinRating: number;
   /** A track added to another manual playlist is kept. */
   keepIfInOtherPlaylist: boolean;
+  /**
+   * @description A track still not found in Plex at the second cleanup in a row is deleted instead of kept (unless marked "Garder").
+   * Off by default: on any doubt, the file is kept.
+   */
+  deleteNotFoundInPlex: boolean;
   /** Share of tracks from never-played artists (0 to 1). */
   newArtistRatio: number;
   maxPerArtist: number;
@@ -38,6 +43,15 @@ export interface Profile {
   likedSubdir: string;
   /** Candidates wait for approval in the UI before downloading. */
   reviewMode: boolean;
+  /**
+   * @description Genre balance of the suggestions, from 0 to 1: 0 follows the listening (the most played genre dominates),
+   * 1 gives every genre of the user the same share.
+   */
+  genreDiversity: number;
+  /**
+   * @description Genres (Last.fm tags, canonical form) never suggested.
+   */
+  excludedGenres: string[];
   enabled: boolean;
   createdAt: string;
 }
@@ -75,6 +89,10 @@ export interface Track {
   title: string;
   key: string;
   kind: "similar" | "new-artist";
+  /**
+   * @description Main genre of the artist (Last.fm tag), null when unknown or for tracks suggested before genres existed.
+   */
+  genre: string | null;
   score: number;
   status: TrackStatus;
   link: string | null;

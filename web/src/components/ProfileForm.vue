@@ -13,8 +13,14 @@ const form = reactive<ProfileInput>({
   tracks: props.profile?.tracks ?? 30,
   likedSubdir: props.profile?.likedSubdir ?? "pickarr",
   reviewMode: props.profile?.reviewMode ?? false,
+  genreDiversity: props.profile?.genreDiversity ?? 0.5,
+  excludedGenres: props.profile?.excludedGenres ?? [],
   enabled: props.profile?.enabled ?? true,
 });
+/**
+ * @description Excluded genres as typed, comma-separated; split into a list on save.
+ */
+const excludedGenres = ref(form.excludedGenres.join(", "));
 /** Token: empty = unchanged (when editing); "useAdmin" clears the profile's token. */
 const plexToken = ref("");
 const useAdmin = ref(!props.profile?.hasPlexToken);
@@ -33,7 +39,15 @@ async function checkLastfm() {
 
 async function save() {
   busy.value = true;
-  const input: Partial<ProfileInput> = { ...form, tracks: Number(form.tracks) };
+  const input: Partial<ProfileInput> = {
+    ...form,
+    tracks: Number(form.tracks),
+    genreDiversity: Number(form.genreDiversity),
+    excludedGenres: excludedGenres.value
+      .split(",")
+      .map((g) => g.trim())
+      .filter(Boolean),
+  };
   if (useAdmin.value) input.plexToken = null;
   else if (plexToken.value) input.plexToken = plexToken.value;
   else if (!props.profile?.hasPlexToken) input.plexToken = null;
@@ -88,6 +102,16 @@ async function save() {
         />
         <small>Les ❤️ et la playlist sont propres à chaque compte Plex.</small>
       </div>
+      <label class="field">
+        <span>Diversité des genres : {{ Math.round(form.genreDiversity * 100) }} %</span>
+        <input v-model.number="form.genreDiversity" type="range" min="0" max="1" step="0.05" />
+        <small>0 % : comme tes écoutes (le genre le plus écouté domine). 100 % : autant de chaque genre que tu écoutes.</small>
+      </label>
+      <label class="field">
+        <span>Genres exclus</span>
+        <input v-model="excludedGenres" type="text" placeholder="phonk, hardstyle" />
+        <small>Tags Last.fm séparés par des virgules : jamais proposés.</small>
+      </label>
     </div>
     <div class="stack" style="margin-top: 16px">
       <label class="check">

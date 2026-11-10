@@ -1,7 +1,7 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
 import type { ProfileDto } from "../contracts";
 import { LastfmService } from "../integrations/lastfm.service";
-import { ProfilesService, type Profile, type ProfileInput } from "./profiles.service";
+import { DEFAULT_GENRE_DIVERSITY, ProfilesService, type Profile, type ProfileInput } from "./profiles.service";
 
 /** The Plex token is never sent back to the browser. */
 const toDto = ({ plexToken, ...rest }: Profile): ProfileDto => ({ ...rest, hasPlexToken: !!plexToken });
@@ -21,12 +21,21 @@ function parseInput(body: Record<string, unknown>, partial: boolean): Partial<Pr
   if (body.tracks !== undefined) out.tracks = Number(body.tracks);
   if (body.reviewMode !== undefined) out.reviewMode = body.reviewMode === true;
   if (body.enabled !== undefined) out.enabled = body.enabled === true;
+  if (body.genreDiversity !== undefined) out.genreDiversity = Number(body.genreDiversity);
+  if (body.excludedGenres !== undefined) {
+    if (!Array.isArray(body.excludedGenres) || body.excludedGenres.some((g) => typeof g !== "string")) {
+      throw new BadRequestException("excludedGenres doit être une liste de textes");
+    }
+    out.excludedGenres = body.excludedGenres as string[];
+  }
   if (!partial) {
     out.plexToken ??= null;
     out.reviewMode ??= false;
     out.enabled ??= true;
     out.tracks ??= 30;
     out.likedSubdir ??= "pickarr";
+    out.genreDiversity ??= DEFAULT_GENRE_DIVERSITY;
+    out.excludedGenres ??= [];
   }
   return out;
 }

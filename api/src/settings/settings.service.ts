@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dryRun: false,
   likedMinRating: 10,
   keepIfInOtherPlaylist: true,
+  deleteNotFoundInPlex: false,
   newArtistRatio: 0.3,
   maxPerArtist: 2,
   pickarrTimeoutHours: 6,

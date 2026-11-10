@@ -13,6 +13,7 @@
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r build",
     "dev:front": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev"
+    "dev:api": "pnpm --filter api dev",
+    "release": "node scripts/release.mjs"
   }
 }

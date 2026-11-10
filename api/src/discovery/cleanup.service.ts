@@ -18,6 +18,11 @@ export interface CleanupResult {
 
 const label = (t: Track) => `${t.artist} - ${t.title}`;
 
+/**
+ * @description Error recorded on a pending track that Plex did not find; also how the next cleanup knows it is a second miss.
+ */
+const NOT_FOUND_IN_PLEX = "Introuvable dans Plex";
+
 const exists = (p: string) =>
   fs.access(p).then(
     () => true,
@@ -177,7 +182,7 @@ export class CleanupService {
   }
 
   async cleanWeek(week: Week, profile: Profile): Promise<CleanupResult> {
-    const { dryRun, likedMinRating, keepIfInOtherPlaylist } = this.settings.get();
+    const { dryRun, likedMinRating, keepIfInOtherPlaylist, deleteNotFoundInPlex } = this.settings.get();
     const result: CleanupResult = { liked: [], deleted: [], pending: [], warnings: [] };
     const token = profile.plexToken ?? undefined;
     await this.plex.identity(); // Plex unreachable: fail before touching any file.
@@ -198,9 +203,17 @@ export class CleanupService {
         let plexTrack = track.ratingKey ? await this.plex.getTrack(track.ratingKey, token).catch(() => null) : null;
         plexTrack ??= await this.plex.findByFile(toPlexPath(track.file), track.title, token, 0);
         if (!plexTrack) {
+          // Opt-in: deleted only when already missing at the previous cleanup, so a passing Plex error cannot cost a liked track.
+          const missedBefore = track.status === "pending" && track.error === NOT_FOUND_IN_PLEX;
+          if (deleteNotFoundInPlex && !track.keep && missedBefore) {
+            await this.deleteTrack(track, dryRun, result);
+            result.warnings.push(`${label(track)} : introuvable dans Plex, supprimé`);
+            continue;
+          }
+          const next = deleteNotFoundInPlex && !track.keep ? "nouvel essai, puis suppression" : "gardé par prudence";
           result.pending.push(label(track));
-          result.warnings.push(`${label(track)} : introuvable dans Plex, gardé par prudence`);
-          if (!dryRun) this.weeks.updateTrack(track.id, { status: "pending", error: "Introuvable dans Plex" });
+          result.warnings.push(`${label(track)} : introuvable dans Plex, ${next}`);
+          if (!dryRun) this.weeks.updateTrack(track.id, { status: "pending", error: NOT_FOUND_IN_PLEX });
           continue;
         }
         const liked = track.keep || (plexTrack.userRating ?? 0) >= likedMinRating || inOtherPlaylists.has(plexTrack.ratingKey);

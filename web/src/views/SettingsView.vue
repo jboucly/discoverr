@@ -150,6 +150,13 @@ async function unblock(artist: string) {
           <span><b>Garder les titres ajoutés à une autre playlist</b><br /><span class="muted small">Même sans ❤️.</span></span>
         </label>
         <label class="check">
+          <input v-model="settings.deleteNotFoundInPlex" type="checkbox" />
+          <span>
+            <b>Supprimer les titres introuvables dans Plex</b><br />
+            <span class="muted small">Au 2ᵉ ménage d'affilée, sauf s'ils sont marqués « Garder ». Sinon ils sont gardés par prudence.</span>
+          </span>
+        </label>
+        <label class="check">
           <input v-model="settings.dryRun" type="checkbox" />
           <span><b>Mode simulation</b><br /><span class="muted small">Propose des titres sans rien télécharger, déplacer ni supprimer. Idéal pour un premier essai.</span></span>
         </label>

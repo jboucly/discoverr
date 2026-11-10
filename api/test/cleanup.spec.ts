@@ -9,6 +9,13 @@ import { PLEX_ROOT, candidate, createWorld, type World } from "./support/world";
 
 const byTitle = (w: World, weekId: number, title: string) => w.weeks.tracks(weekId).find((t) => t.title === title)!;
 
+/**
+ * @description Makes the fake Plex lose a file, including after the rescan that follows a deletion (which would index it again).
+ */
+const hideFromPlex = (w: World, file: string) => {
+  for (const item of [...w.plex.items.values()]) if (item.file.endsWith(`/${path.basename(file)}`)) w.plex.items.delete(item.ratingKey);
+};
+
 describe("ménage", () => {
   let w: World;
   afterEach(() => w.close());
@@ -162,6 +169,51 @@ describe("ménage", () => {
     assert.ok(existsSync(lost.file!));
     assert.equal(byTitle(w, week!.id, "2").status, "deleted");
     assert.equal(w.weeks.week(week!.id).status, "active");
+  });
+
+  test("titre introuvable dans Plex avec suppression activée : en attente au 1er ménage, supprimé au 2e", async () => {
+    w = await createWorld();
+    w.settings.update({ deleteNotFoundInPlex: true });
+    const profile = w.addProfile({ tracks: 2 });
+    await w.run(profile.id, [candidate("A", "1"), candidate("B", "2"), candidate("C", "3")]);
+    const [week] = w.weeks.weeks(profile.id);
+    const lost = byTitle(w, week!.id, "1");
+    w.plex.items.delete(lost.ratingKey!);
+
+    const first = await w.cleanup.cleanWeek(week!, profile);
+    assert.deepEqual(first.pending, ["A - 1"]);
+    assert.match(first.warnings.join("\n"), /nouvel essai, puis suppression/);
+    assert.ok(existsSync(lost.file!));
+    assert.equal(w.weeks.week(week!.id).status, "active");
+
+    hideFromPlex(w, lost.file!);
+    const second = await w.cleanup.cleanWeek(w.weeks.week(week!.id), profile);
+    assert.deepEqual(second.pending, []);
+    assert.deepEqual(second.deleted, ["A - 1"]);
+    assert.match(second.warnings.join("\n"), /introuvable dans Plex, supprimé/);
+    assert.equal(byTitle(w, week!.id, "1").status, "deleted");
+    assert.ok(!existsSync(lost.file!));
+    assert.equal(w.weeks.week(week!.id).status, "cleaned");
+  });
+
+  test("titre introuvable dans Plex marqué « Garder » : jamais supprimé, même avec la suppression activée", async () => {
+    w = await createWorld();
+    w.settings.update({ deleteNotFoundInPlex: true });
+    const profile = w.addProfile({ tracks: 2 });
+    await w.run(profile.id, [candidate("A", "1"), candidate("B", "2"), candidate("C", "3")]);
+    const [week] = w.weeks.weeks(profile.id);
+    const lost = byTitle(w, week!.id, "1");
+    w.weeks.updateTrack(lost.id, { keep: true });
+    w.plex.items.delete(lost.ratingKey!);
+
+    await w.cleanup.cleanWeek(week!, profile);
+    hideFromPlex(w, lost.file!);
+    const second = await w.cleanup.cleanWeek(w.weeks.week(week!.id), profile);
+
+    assert.deepEqual(second.pending, ["A - 1"]);
+    assert.match(second.warnings.join("\n"), /gardé par prudence/);
+    assert.equal(byTitle(w, week!.id, "1").status, "pending");
+    assert.ok(existsSync(lost.file!));
   });
 
   test("bibliothèque pickarr partagée : aucune suppression sans ALLOW_DELETE_IN_PICKARR_LIBRARY", async () => {

@@ -16,6 +16,11 @@ export interface Settings {
   likedMinRating: number;
   /** A track added to another manual playlist is kept. */
   keepIfInOtherPlaylist: boolean;
+  /**
+   * @description A track still not found in Plex at the second cleanup in a row is deleted instead of kept (unless marked "Garder").
+   * Off by default: on any doubt, the file is kept.
+   */
+  deleteNotFoundInPlex: boolean;
   /** Share of tracks from never-played artists (0 to 1). */
   newArtistRatio: number;
   maxPerArtist: number;

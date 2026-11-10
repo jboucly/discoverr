@@ -52,6 +52,7 @@ Every week (Monday 3 AM by default), for each active profile:
 5. **Cleanup of the previous week**, once the new playlist is in place:
    - **kept**: ❤️ tracks (rating ≥ 10), tracks marked "Keep" in the UI, and tracks added to another of your playlists. They are moved to your folder (`Musiques/pickarr` by default) and their rating is preserved;
    - **deleted**: all the others, file and empty folders included.
+   - **in doubt** (Plex unreachable, track not found in Plex): the file is kept and retried on the next run. With **Delete tracks not found in Plex** (Settings, off by default), a track still not found at the second cleanup in a row is deleted, unless it is marked "Keep".
 
 ### Why a dedicated pickarr instance?
 
